@@ -10,6 +10,6 @@ def print_directory_structure(start_path, prefix=''):
             print(f"{prefix}📄 {item}")
 
 if __name__ == "__main__":
-    project_root = r"D:\PhD\codingPractices\SYTN3"
+    project_root = r"D:\PhD\dec2025"
     print(f"Project Structure for: {project_root}\n")
     print_directory_structure(project_root)
