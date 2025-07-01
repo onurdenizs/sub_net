@@ -1,0 +1,2 @@
+Provide me the full script written in pythonic, clean, professional, efficient way, with all the logs, error handling, docstrings and in line comments, and also script should print some statements to terminal screen related the process and if script successfully finished working etc. It should run on my local computer. 
+DO NOT try to verify dataset location you don't have access to any files on my local computer. I do confirm that all the necessary files are exist on my local computer
