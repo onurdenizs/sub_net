@@ -4,7 +4,7 @@ import pandas as pd
 # ────────────────────────────────────────────────
 # Config
 # ────────────────────────────────────────────────
-CSV_PATH = "D:/PhD/codingPractices/SYTN3/data/interim/helper_files/linie_mit_polygon_modified.csv"
+CSV_PATH = "D:\PhD\dec2025\data\raw\linie_mit_polygon.csv"
 
 # ────────────────────────────────────────────────
 # Diagnostics
