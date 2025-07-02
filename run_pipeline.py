@@ -2,14 +2,14 @@ import argparse
 
 # Aşamaları import et
 from stages.stage_01_clean_stations import run as run_stage_01
-from stages.stage_02_polygon_stitch import run as run_stage_02
-from stages.stage_03_generate_edges import run as run_stage_03
+# from stages.stage_02_polygon_stitch import run as run_stage_02
+# from stages.stage_03_generate_edges import run as run_stage_03
 
 # Stage numarası: (isim, fonksiyon)
 STAGES = {
     1: ("Stage 01 - Clean Stations", run_stage_01),
-    2: ("Stage 02 - Polygon Stitch", run_stage_02),
-    3: ("Stage 03 - Generate Edges", run_stage_03),
+    # 2: ("Stage 02 - Polygon Stitch", run_stage_02),
+    # 3: ("Stage 03 - Generate Edges", run_stage_03),
 }
 
 def run_selected_stages(start: int, end: int):
