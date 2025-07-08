@@ -122,8 +122,6 @@ def run():
     ]
     df = df[keep_cols].reset_index(drop=True)
 
-    all_processed_dfs = []
-
     for idx, line_id in enumerate(LINE_ID_LIST, 1):
         logger.info(f"\n📊 Line {idx}/{len(LINE_ID_LIST)} - Linie {line_id}")
         segment_df = df[df["Linie"] == line_id].sort_values("KM START").reset_index(drop=True)
@@ -133,8 +131,12 @@ def run():
         while i < len(segment_df):
             segment_df, i = choose_action(i, segment_df, CLOSENESS_THRESHOLD, NEVER_SKIP_LIST)
 
+        # Save results
+        segment_df.to_csv(OUTPUT_POLYGON_FILE, index=False, encoding='utf-8-sig')
+        logger.info(f"\n✍️ File saved at: {OUTPUT_POLYGON_FILE.resolve()}")
+        logger.info(f"🏁 Stage 01 completed successfully. Total segments: {len(segment_df)}")
+
         print_all_segments(segment_df)
-        all_processed_dfs.append(segment_df)
 
         # ------------------------
         # ✅ Validation Layer
@@ -175,8 +177,3 @@ def run():
             logger.info("✅ Validation passed. All segments meet the expected criteria.")
         else:
             logger.warning("❌ Validation failed. See warnings above.")
-
-    final_df = pd.concat(all_processed_dfs, ignore_index=True)
-    final_df.to_csv(OUTPUT_POLYGON_FILE, index=False, encoding='utf-8-sig')
-    logger.info(f"\n✍️ Combined file saved at: {OUTPUT_POLYGON_FILE.resolve()}")
-    logger.info(f"🏁 Stage 01 completed successfully. Total segments: {len(final_df)}")
