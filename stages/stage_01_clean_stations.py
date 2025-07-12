@@ -15,27 +15,7 @@ from utils.segment_ops import (
     remove_first_segment,
     remove_last_segment
 )
-
-# ------------------------
-# Configuration
-# ------------------------
-RAW_DIR = Path("data/raw")
-PROCESSED_DIR = Path("data/processed")
-POLYGON_FILE = RAW_DIR / "linie_mit_polygon.csv"
-OUTPUT_POLYGON_FILE = PROCESSED_DIR / "filtered_sub_network_data.csv"
-LINE_ID_LIST = [850, 751, 710, 650, 540, 450, 250, 100, 501, 500,
-                722, 723, 720, 890, 900, 150, 200, 210, 410, 250, 400, 452]
-NEVER_SKIP_LIST = ['LZ', 'BS', 'BN', 'ZUE', 'LS', 'GE']
-MIN_PLATFORM_LENGTH = 200         # meters
-MAX_PLATFORM_LENGTH = 750         # meters
-DEFAULT_PLATFORM_LENGTH = 350     # meters
-ENTRY_OFFSET_BUFFER = 200         # meters
-MIN_MAIN_LINE_LENGTH = 200        # meters
-MAX_PLATFORM_COUNT = 20           # meters
-DEFAULT_PLATFORM_COUNT = 2        # meters
-CLOSENESS_THRESHOLD = (
-    MIN_PLATFORM_LENGTH + ENTRY_OFFSET_BUFFER * 2 + MIN_MAIN_LINE_LENGTH
-)
+from utils.constants import (CLOSENESS_THRESHOLD, PROCESSED_DIR, POLYGON_FILE, FILTERED_SUB_NETWORK_POLYGON_FILE, LINE_ID_LIST, NEVER_SKIP_LIST)
 
 # ------------------------
 # Logging setup
@@ -177,6 +157,6 @@ def run():
             logger.warning("❌ Validation failed. See warnings above.")
 
     final_df = pd.concat(all_processed_dfs, ignore_index=True)
-    final_df.to_csv(OUTPUT_POLYGON_FILE, index=False, encoding='utf-8-sig')
-    logger.info(f"\n✍️ Combined file saved at: {OUTPUT_POLYGON_FILE.resolve()}")
+    final_df.to_csv(FILTERED_SUB_NETWORK_POLYGON_FILE, index=False, sep=';', encoding='utf-8-sig')
+    logger.info(f"\n✍️ Combined file saved at: {FILTERED_SUB_NETWORK_POLYGON_FILE.resolve()}")
     logger.info(f"🏁 Stage 01 completed successfully. Total segments: {len(final_df)}")
