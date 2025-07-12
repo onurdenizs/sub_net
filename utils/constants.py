@@ -3,7 +3,7 @@ LINE_ID_LIST = [850, 751, 710, 650, 540, 450, 250, 100, 501, 500,
                 722, 723, 720, 890, 900, 150, 200, 210, 410, 250, 400, 452]
 NEVER_SKIP_LIST = ['LZ', 'BS', 'BN', 'ZUE', 'LS', 'GE']
 MIN_PLATFORM_LENGTH = 200         # meters
-MAX_PLATFORM_LENGTH = 750         # meters
+MAX_PLATFORM_LENGTH = 500         # meters
 DEFAULT_PLATFORM_LENGTH = 350     # meters
 ENTRY_OFFSET_BUFFER = 200         # meters
 MIN_MAIN_LINE_LENGTH = 200        # meters
@@ -26,3 +26,5 @@ POLYGON_FILE = RAW_DIR / "linie_mit_polygon.csv"
 FILTERED_SUB_NETWORK_POLYGON_FILE = PROCESSED_DIR / "filtered_sub_network_data.csv"
 OUTPUT_PLATFORM_FILE = PROCESSED_DIR / "station_platform_info.csv"
 PLATFORM_FILE = RAW_DIR / "perronkante.csv"
+STATION_HELPER_FILE = PROCESSED_DIR / "station_info.csv"
+

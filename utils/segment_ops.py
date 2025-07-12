@@ -5,6 +5,12 @@ from shapely.geometry import LineString
 from typing import Tuple
 
 def print_all_segments(segment_df: pd.DataFrame ):
+    """
+    Print all segments in the DataFrame with their index, start, end, and polygon length.
+
+    Args:
+        segment_df (pd.DataFrame): DataFrame containing segment data.
+    """
     print(f"Number of Total segments found: {str(len(segment_df))}")
     print(print(segment_df.columns))
     for i in range(0,len(segment_df)):
@@ -16,13 +22,41 @@ def print_all_segments(segment_df: pd.DataFrame ):
 
 
 def is_first_segment(i: int) -> bool:
+    """
+    Check if the current index is the last segment.
+
+    Args:
+        i (int): Index to check.
+        df (pd.DataFrame): DataFrame containing segment data.
+
+    Returns:
+        bool: True if last segment, False otherwise.
+    """
     return i == 0
 
 def is_last_segment(i: int, df: pd.DataFrame) -> bool:
+    """
+    Check if the current index is the last segment.
+
+    Args:
+        i (int): Index to check.
+        df (pd.DataFrame): DataFrame containing segment data.
+
+    Returns:
+        bool: True if last segment, False otherwise.
+    """
     return i == len(df) - 1
 
 def parse_geo_shape(geo_shape_str: str) -> list:
-    """Parses a GeoJSON-style geometry string into a list of coordinates."""
+    """
+    Parse a GeoJSON-style geometry string into a list of coordinates.
+
+    Args:
+        geo_shape_str (str): GeoJSON string.
+
+    Returns:
+        list: List of coordinate pairs, or empty list if parse fails.
+    """
     try:
         if isinstance(geo_shape_str, str):
             geo_shape_str = geo_shape_str.replace("'", '"')  # Normalize quotes
@@ -37,7 +71,15 @@ def parse_geo_shape(geo_shape_str: str) -> list:
         return []
 
 def calculate_linestring_length(coords: list) -> float:
-    """Calculates the length of a LineString defined by coordinates."""
+    """
+    Calculate the length of a LineString defined by coordinates.
+
+    Args:
+        coords (list): List of coordinate pairs.
+
+    Returns:
+        float: LineString length (in same units as coordinates), or 0.0 if invalid.
+    """
     try:
         if len(coords) < 2:
             return 0.0
@@ -48,7 +90,16 @@ def calculate_linestring_length(coords: list) -> float:
         return 0.0
 
 def merge_geo_shapes(geo1: str, geo2: str) -> str:
-    """Merges two GeoJSON-style LineStrings into one."""
+    """
+    Merge two GeoJSON LineStrings into a single LineString.
+
+    Args:
+        geo1 (str): GeoJSON string of first segment.
+        geo2 (str): GeoJSON string of second segment.
+
+    Returns:
+        str: Merged GeoJSON string.
+    """
     coords1 = parse_geo_shape(geo1)
     coords2 = parse_geo_shape(geo2)
     if coords1 and coords2 and coords1[-1] == coords2[0]:
@@ -63,6 +114,16 @@ def merge_geo_shapes(geo1: str, geo2: str) -> str:
     return json.dumps(merged_shape)
 
 def combine_next_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, int]:
+    """
+    Combine the current segment with the next one.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing segment data.
+        i (int): Current index.
+
+    Returns:
+        Tuple[pd.DataFrame, int]: Updated DataFrame and current index (re-evaluate merged row).
+    """
     try:
         current_segment = df.iloc[[i]]
         next_segment = df.iloc[[i + 1]]
@@ -91,6 +152,16 @@ def combine_next_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, int]:
         return df, i + 1
 
 def combine_previous_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, int]:
+    """
+    Combine the current segment with the previous one.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing segment data.
+        i (int): Current index.
+
+    Returns:
+        Tuple[pd.DataFrame, int]: Updated DataFrame and new index (points to merged row).
+    """
     try:
         prev_segment = df.iloc[[i - 1]]
         current_segment = df.iloc[[i]]
@@ -119,6 +190,15 @@ def combine_previous_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, in
         return df, i + 1
 
 def remove_first_segment(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Remove the first segment from the DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing segment data.
+
+    Returns:
+        pd.DataFrame: Updated DataFrame with first row removed.
+    """
     try:
         return df.iloc[1:].reset_index(drop=True)
     except Exception as e:
@@ -126,8 +206,18 @@ def remove_first_segment(df: pd.DataFrame) -> pd.DataFrame:
         return df
 
 def remove_last_segment(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Remove the last segment from the DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing segment data.
+
+    Returns:
+        pd.DataFrame: Updated DataFrame with last row removed.
+    """
     try:
         return df.iloc[:-1].reset_index(drop=True)
     except Exception as e:
         logging.error(f"remove_last_segment failed: {e}")
         return df
+

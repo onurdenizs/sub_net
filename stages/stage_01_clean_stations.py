@@ -77,7 +77,7 @@ def choose_action(i, segment_df, threshold, never_skip):
 
     return segment_df, i + 1
 
-def run():
+def run(debug=False):
     logger.info(f"\n🚧 CLOSENESS_THRESHOLD calculated as: {CLOSENESS_THRESHOLD} meters")
     logger.info("\n🚀 Stage 01 started: Clean and analyze line segment geometries")
 
