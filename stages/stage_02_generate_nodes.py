@@ -1,11 +1,12 @@
 import pandas as pd
 import logging
 from pathlib import Path
+import json
 from utils.constants import (
-    PROCESSED_DIR, FILTERED_SUB_NETWORK_POLYGON_FILE, PLATFORM_FILE, STATION_HELPER_FILE
+    PROCESSED_DIR, FILTERED_SUB_NETWORK_POLYGON_FILE, PLATFORM_FILE, STATION_HELPER_FILE, STATION_ENTRY_NODE_FILE
 )
 from utils.platform_ops import (
-    filter_perron_data, process_station_platform_info, find_station_connections, define_station_types
+    filter_perron_data, process_station_platform_info, find_station_connections, define_station_types, assign_center_coordinates, compute_entry_nodes_json
 )
 
 def setup_logger(debug_mode=False):
@@ -62,11 +63,17 @@ def run(debug=False):
         platform_df = process_station_platform_info(perron_df_filtered, unique_ops, logger)
         platform_df = find_station_connections(platform_df)
         platform_df = define_station_types(platform_df)
+        platform_df = assign_center_coordinates(platform_df, logger)
+        entry_node_data  = compute_entry_nodes_json(platform_df, logger)
         
         # 5️⃣ Save result
         
         platform_df.to_csv(STATION_HELPER_FILE, index=False, encoding='utf-8-sig')
         logger.info(f"✅ Saved platform info to: {STATION_HELPER_FILE.resolve()}")
+        with open(STATION_ENTRY_NODE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(entry_node_data, f, indent=4, ensure_ascii=False)
+
+        logger.info(f"✅ Saved entry node coordinates to: {STATION_ENTRY_NODE_FILE.resolve()}")
 
     except Exception as e:
         logger.error(f"❌ Stage 02 failed: {e}")
