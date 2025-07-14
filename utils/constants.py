@@ -6,10 +6,11 @@ MIN_PLATFORM_LENGTH = 200         # meters
 MAX_PLATFORM_LENGTH = 500         # meters
 DEFAULT_PLATFORM_LENGTH = 350     # meters
 ENTRY_OFFSET_BUFFER = 500         # meters
-MIN_MAIN_LINE_LENGTH = 200        # meters
+MIN_MAIN_LINE_LENGTH = 300        # meters
 MAX_PLATFORM_COUNT = 20           # meters
 MIN_PLATFORM_COUNT = 2            # meters
 DEFAULT_PLATFORM_COUNT = 5        # meters
+DEFAULT_PLATFORM_OFFSET = 2       # meters
 CLOSENESS_THRESHOLD = (
     MAX_PLATFORM_LENGTH + ENTRY_OFFSET_BUFFER * 2 + MIN_MAIN_LINE_LENGTH
 )

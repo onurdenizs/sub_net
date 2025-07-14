@@ -61,7 +61,7 @@ def run(debug=False):
 
         # 4️⃣ Process platform information
         platform_df = process_station_platform_info(perron_df_filtered, unique_ops, logger)
-        platform_df = find_station_connections(platform_df)
+        platform_df = find_station_connections(platform_df, logger)
         platform_df = define_station_types(platform_df)
         platform_df = assign_center_coordinates(platform_df, logger)
         entry_node_data  = compute_entry_nodes_json(platform_df, logger)

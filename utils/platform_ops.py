@@ -194,46 +194,51 @@ def process_station_platform_info(perron_df, unique_ops, logger) -> pd.DataFrame
 
     platform_df = pd.DataFrame(processed_rows)
     return platform_df
-def find_station_connections(platform_df: pd.DataFrame) -> pd.DataFrame:
+def find_station_connections(platform_df: pd.DataFrame, logger: logging.Logger) -> pd.DataFrame:
     """
-    processing function to read filtered polygon data by line ids (Linie column) and at each row decide connected stations and their directions (west or east).
+    Determine connected stations and their directions (West or East) 
+    based on filtered polygon segments.
 
     Args:
-        platform_df (pd.DataFrame): Filtered polygon DataFrame.
-        
+        platform_df (pd.DataFrame): Platform DataFrame with station list.
 
     Returns:
-        pd.DataFrame: Final DataFrame with platform info.
+        pd.DataFrame: Updated DataFrame with 'connected_stations' column.
     """
-    polygon_df = pd.read_csv(FILTERED_SUB_NETWORK_POLYGON_FILE, delimiter=';')
-    unique_linie_list = polygon_df["Linie"].unique().tolist()
-    
-    platform_df['connected_stations'] = platform_df.apply(
-    lambda row: {'West': set(), 'East': set()}, axis=1
-    )
-    
-    for idx, line_id in enumerate(unique_linie_list, 1):
-        current_line_segments = polygon_df[polygon_df["Linie"] == line_id].copy()
-        
-        for idy, row in current_line_segments.iterrows():
-            
 
-            coords = parse_geo_shape(row['Geo shape'])
-            second_station_relative_to_first = find_direction_between_coordinates(coords[0], coords[1])
-            index_start_op = platform_df[platform_df['station'] == row['START_OP']].index
-            index_end_op = platform_df[platform_df['station'] == row['END_OP']].index
-            
-            if not index_start_op.empty:
-                ids = index_start_op[0]
-                platform_df.at[ids, 'connected_stations'][second_station_relative_to_first].add(row['END_OP'])
-                if second_station_relative_to_first == "West":
-                    ide = index_end_op[0]
-                    platform_df.at[ide, 'connected_stations']["East"].add(row['START_OP'])
-                elif second_station_relative_to_first == "East":
-                    ide = index_end_op[0]
-                    platform_df.at[ide, 'connected_stations']["West"].add(row['START_OP'])
+
+    polygon_df = pd.read_csv(FILTERED_SUB_NETWORK_POLYGON_FILE, delimiter=';')
+    platform_df['connected_stations'] = platform_df.apply(
+        lambda row: {'West': set(), 'East': set()}, axis=1
+    )
+
+    for idx, row in polygon_df.iterrows():
+        start_op = row['START_OP']
+        end_op = row['END_OP']
+        coords = parse_geo_shape(row['Geo shape'])
+
+        if not coords or len(coords) < 2:
+            logging.warning(f"⚠️ Segment {start_op}-{end_op} has insufficient coordinates.")
+            continue
+
+        # First direction: start -> end
+        dir_start_to_end = find_direction_between_coordinates(coords[0], coords[1])
+
+        # Reverse direction: end -> start
+        dir_end_to_start = find_direction_between_coordinates(coords[-1], coords[-2])
+
+        # Update start_op's connected_stations
+        start_idx = platform_df[platform_df['station'] == start_op].index
+        if not start_idx.empty and dir_start_to_end in ['West', 'East']:
+            platform_df.at[start_idx[0], 'connected_stations'][dir_start_to_end].add(end_op)
+
+        # Update end_op's connected_stations
+        end_idx = platform_df[platform_df['station'] == end_op].index
+        if not end_idx.empty and dir_end_to_start in ['West', 'East']:
+            platform_df.at[end_idx[0], 'connected_stations'][dir_end_to_start].add(start_op)
 
     return platform_df
+
 
 def define_station_types(platform_df: pd.DataFrame) -> pd.DataFrame:
     """
