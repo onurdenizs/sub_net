@@ -1,12 +1,13 @@
 from pathlib import Path
+
 LINE_ID_LIST = [850, 751, 710, 650, 540, 450, 250, 100, 501, 500,
-                722, 723, 720, 890, 900, 150, 200, 210, 410, 250, 400, 452]
-NEVER_SKIP_LIST = ['LZ', 'BS', 'BN', 'ZUE', 'LS', 'GE']
+                722, 723, 720, 890, 900, 150, 200, 210, 410, 250, 400, 452, 451]
+NEVER_SKIP_LIST = ['LZ', 'BS', 'BN', 'ZUE', 'LS', 'GE'] #, 'ABOW', 'ABO', 'RTR'
 MIN_PLATFORM_LENGTH = 200         # meters
 MAX_PLATFORM_LENGTH = 500         # meters
-DEFAULT_PLATFORM_LENGTH = 350     # meters
-ENTRY_OFFSET_BUFFER = 500         # meters
-MIN_MAIN_LINE_LENGTH = 300        # meters
+DEFAULT_PLATFORM_LENGTH = 250     # meters
+ENTRY_OFFSET_BUFFER = 300         # meters
+MIN_MAIN_LINE_LENGTH = 400        # meters
 MAX_PLATFORM_COUNT = 20           # meters
 MIN_PLATFORM_COUNT = 2            # meters
 DEFAULT_PLATFORM_COUNT = 5        # meters
@@ -25,8 +26,10 @@ RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
 POLYGON_FILE = RAW_DIR / "linie_mit_polygon.csv"
 FILTERED_SUB_NETWORK_POLYGON_FILE = PROCESSED_DIR / "filtered_sub_network_data.csv"
-OUTPUT_PLATFORM_FILE = PROCESSED_DIR / "station_platform_info.csv"
+STATION_INFO_FILE = PROCESSED_DIR / "station_platform_info.csv"
 PLATFORM_FILE = RAW_DIR / "perronkante.csv"
-STATION_HELPER_FILE = PROCESSED_DIR / "station_info.csv"
+STATION_HELPER_FILE = PROCESSED_DIR / "station_info_master.csv"
 STATION_ENTRY_NODE_FILE = PROCESSED_DIR / "station_entry_nodes.json"
+
+
 

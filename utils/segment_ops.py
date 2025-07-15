@@ -113,7 +113,7 @@ def merge_geo_shapes(geo1: str, geo2: str) -> str:
     }
     return json.dumps(merged_shape)
 
-def combine_next_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, int]:
+def combine_next_segment(df: pd.DataFrame, i: int, logger: logging.Logger) -> Tuple[pd.DataFrame, int]:
     """
     Combine the current segment with the next one.
 
@@ -124,10 +124,14 @@ def combine_next_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, int]:
     Returns:
         Tuple[pd.DataFrame, int]: Updated DataFrame and current index (re-evaluate merged row).
     """
+    
     try:
         current_segment = df.iloc[[i]]
         next_segment = df.iloc[[i + 1]]
-        merged_geo_shape = merge_geo_shapes(current_segment["Geo shape"].values[0], next_segment["Geo shape"].values[0])
+        merged_geo_shape = merge_geo_shapes(
+            current_segment["Geo shape"].values[0],
+            next_segment["Geo shape"].values[0]
+        )
         merged_coords = parse_geo_shape(merged_geo_shape)
 
         new_row = {
@@ -142,16 +146,29 @@ def combine_next_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, int]:
             "_coordinates": merged_coords
         }
 
-        df = df.drop(df.index[[i, i + 1]]).reset_index(drop=True)
-        upper = df.iloc[:i]
-        lower = df.iloc[i:]
-        df = pd.concat([upper, pd.DataFrame([new_row]), lower], ignore_index=True)
-        return df, i
-    except Exception as e:
-        logging.error(f"combine_next_segment failed at index {i}: {e}")
-        return df, i + 1
+        logger.debug(f"Combining {current_segment['START_OP'].values[0]}-{current_segment['END_OP'].values[0]} "
+                     f"with {next_segment['START_OP'].values[0]}-{next_segment['END_OP'].values[0]} → "
+                     f"{new_row['START_OP']}-{new_row['END_OP']}")
 
-def combine_previous_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, int]:
+        # ⏩ BEFORE DROP, slice upper and lower correctly
+        upper = df.iloc[:i]
+        lower = df.iloc[i + 2:]
+
+        # 🔗 Concatenate with new_row in between
+        df = pd.concat([upper, pd.DataFrame([new_row]), lower], ignore_index=True)
+        duplicates = df[df.duplicated(subset=['Linie', 'START_OP', 'END_OP', 'KM START', 'KM END'], keep=False)]
+
+
+        if not duplicates.empty:
+            print(f"\n⚠️ Found {len(duplicates)} duplicate rows (counting all occurrences):")
+        
+        return df, i  # Re-evaluate merged row
+    except Exception as e:
+        logger.error(f"combine_next_segment failed at index {i}: {e}")
+        return df, i + 1  # Skip ahead on failure
+
+
+def combine_previous_segment(df: pd.DataFrame, i: int, logger: logging.Logger) -> Tuple[pd.DataFrame, int]:
     """
     Combine the current segment with the previous one.
 
@@ -162,10 +179,14 @@ def combine_previous_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, in
     Returns:
         Tuple[pd.DataFrame, int]: Updated DataFrame and new index (points to merged row).
     """
+    #logger.info(f"Number of rows before combine_previous_segment: {str(len(df))}")
     try:
         prev_segment = df.iloc[[i - 1]]
         current_segment = df.iloc[[i]]
-        merged_geo_shape = merge_geo_shapes(prev_segment["Geo shape"].values[0], current_segment["Geo shape"].values[0])
+        merged_geo_shape = merge_geo_shapes(
+            prev_segment["Geo shape"].values[0],
+            current_segment["Geo shape"].values[0]
+        )
         merged_coords = parse_geo_shape(merged_geo_shape)
 
         new_row = {
@@ -180,14 +201,28 @@ def combine_previous_segment(df: pd.DataFrame, i: int) -> Tuple[pd.DataFrame, in
             "_coordinates": merged_coords
         }
 
-        df = df.drop(df.index[[i - 1, i]]).reset_index(drop=True)
+        logger.debug(f"Combining {prev_segment['START_OP'].values[0]}-{prev_segment['END_OP'].values[0]} "
+                     f"with {current_segment['START_OP'].values[0]}-{current_segment['END_OP'].values[0]} → "
+                     f"{new_row['START_OP']}-{new_row['END_OP']}")
+
+        # ⏩ BEFORE DROP, slice upper and lower correctly
         upper = df.iloc[:i - 1]
-        lower = df.iloc[i - 1:]
+        lower = df.iloc[i + 1:]
+
+        # 🔗 Concatenate with new_row in between
         df = pd.concat([upper, pd.DataFrame([new_row]), lower], ignore_index=True)
-        return df, i - 1
+        
+        duplicates = df[df.duplicated(subset=['Linie', 'START_OP', 'END_OP', 'KM START', 'KM END'], keep=False)]
+
+
+        if not duplicates.empty:
+            print(f"\n⚠️ Found {len(duplicates)} duplicate rows (counting all occurrences):")
+        
+        return df, i   # Point to merged row
     except Exception as e:
-        logging.error(f"combine_previous_segment failed at index {i}: {e}")
-        return df, i + 1
+        logger.error(f"combine_previous_segment failed at index {i}: {e}")
+        return df, i + 1  # Skip ahead on failure
+
 
 def remove_first_segment(df: pd.DataFrame) -> pd.DataFrame:
     """

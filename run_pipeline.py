@@ -1,7 +1,5 @@
 import argparse
 
-
-
 # Aşamaları import et
 from stages.stage_01_clean_stations import run as run_stage_01
 from stages.stage_02_generate_nodes import run as run_stage_02
@@ -29,7 +27,6 @@ if __name__ == "__main__":
     parser.add_argument("--start", type=int, default=1, help="Başlangıç aşaması (varsayılan: 1)")
     parser.add_argument("--end", type=int, help="Bitiş aşaması (varsayılan: start ile aynı)")
     parser.add_argument('--debug', action='store_true', help='Enable debug logging')
-
 
     args = parser.parse_args()
     end_stage = args.end if args.end is not None else args.start

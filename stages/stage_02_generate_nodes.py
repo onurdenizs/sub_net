@@ -1,24 +1,14 @@
 import pandas as pd
 import logging
 from pathlib import Path
-import json
 from utils.constants import (
-    PROCESSED_DIR, FILTERED_SUB_NETWORK_POLYGON_FILE, PLATFORM_FILE, STATION_HELPER_FILE, STATION_ENTRY_NODE_FILE
+    PROCESSED_DIR, FILTERED_SUB_NETWORK_POLYGON_FILE, PLATFORM_FILE, STATION_HELPER_FILE, NEVER_SKIP_LIST
 )
 from utils.platform_ops import (
-    filter_perron_data, process_station_platform_info, find_station_connections, define_station_types, assign_center_coordinates, compute_entry_nodes_json
+    filter_perron_data, build_station_info, find_station_connections, define_station_types, find_entry_nodes
 )
 
 def setup_logger(debug_mode=False):
-    """
-    Setup logger with INFO or DEBUG level.
-
-    Args:
-        debug_mode (bool): Whether to enable debug mode.
-
-    Returns:
-        logging.Logger: Configured logger.
-    """
     logger = logging.getLogger(__name__)
     if not logger.hasHandlers():
         handler = logging.StreamHandler()
@@ -29,52 +19,68 @@ def setup_logger(debug_mode=False):
     return logger
 
 def run(debug=False):
-    """
-    Stage 02: Decide Platform Length for Sub-Network Stations.
-
-    Args:
-        debug (bool): Enable debug logging.
-    """
     logger = setup_logger(debug)
-    logger.info("🚀 Stage 02 started: Decide Platform Length for Sub-Network Stations")
+    logger.info("🚀 Stage 02 started: Generate station info")
 
-    # Ensure processed directory exists
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     try:
-        # 1️⃣ Load raw data
-        platform_cols_to_read = [
-            'Line', 'Station abbreviation', 'Customer track number',
-            'Platform number', 'Length of platform edge'
-        ]
+        # Load data
         polygon_df = pd.read_csv(FILTERED_SUB_NETWORK_POLYGON_FILE, delimiter=';')
-        perron_df = pd.read_csv(PLATFORM_FILE, delimiter=';', usecols=platform_cols_to_read)
+        perron_df = pd.read_csv(PLATFORM_FILE, delimiter=';')
 
-        # 2️⃣ Prepare unique stations
-        unique_ops = set(polygon_df["START_OP"]).union(polygon_df["END_OP"])
-
-        # 3️⃣ Filter perron data
+        # Filter perron data to only include used stations
+        unique_ops = set(polygon_df['START_OP']).union(polygon_df['END_OP'])
         perron_df_filtered = filter_perron_data(perron_df, unique_ops)
 
-        logger.info(f"🔎 Filtered perronkante by Station abbreviation: {len(set(perron_df_filtered['Station abbreviation']))} unique stations")
-        logger.info(f"📥 Loaded sub_network polygon file: {FILTERED_SUB_NETWORK_POLYGON_FILE} ({len(unique_ops)} unique stations)")
+        logger.info(f"🔎 Found {len(unique_ops)} unique stations in polygon file")
+        logger.info(f"🔎 Filtered perronkante: {len(perron_df_filtered)} rows")
 
-        # 4️⃣ Process platform information
-        platform_df = process_station_platform_info(perron_df_filtered, unique_ops, logger)
-        platform_df = find_station_connections(platform_df, logger)
-        platform_df = define_station_types(platform_df)
-        platform_df = assign_center_coordinates(platform_df, logger)
-        entry_node_data  = compute_entry_nodes_json(platform_df, logger)
-        
-        # 5️⃣ Save result
-        
-        platform_df.to_csv(STATION_HELPER_FILE, index=False, encoding='utf-8-sig')
-        logger.info(f"✅ Saved platform info to: {STATION_HELPER_FILE.resolve()}")
-        with open(STATION_ENTRY_NODE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(entry_node_data, f, indent=4, ensure_ascii=False)
+        # Build station info
+        station_info_df = build_station_info(polygon_df, perron_df_filtered, logger)
 
-        logger.info(f"✅ Saved entry node coordinates to: {STATION_ENTRY_NODE_FILE.resolve()}")
+        # Add connected stations
+        station_info_df = find_station_connections(station_info_df, polygon_df, logger)
+
+        # Define station types
+        station_info_df = define_station_types(station_info_df)
+        
+        # Find Entry Nodes
+        station_info_df = find_entry_nodes(station_info_df, polygon_df, logger)
+
+        # Save station info CSV
+        station_info_df.sort_values(by='station', inplace=True)
+        station_info_df.to_csv(STATION_HELPER_FILE, index=False, sep=';', encoding='utf-8-sig')
+        logger.info(f"✅ Saved station info CSV to: {STATION_HELPER_FILE.resolve()}")
 
     except Exception as e:
         logger.error(f"❌ Stage 02 failed: {e}")
-        return
+    # ------------------------
+    # ✅ Final Validation Layer
+    # ------------------------
+    logger.info("\n🔎 Performing final validations...")
+    # 1️⃣ Number of stations validation
+    polygon_unique_stations = set(polygon_df['START_OP']).union(polygon_df['END_OP'])
+    platform_unique_stations = set(station_info_df['station'])
+    if len(polygon_unique_stations) != len(platform_unique_stations):
+        logger.warning(f"⚠️ 1️⃣ Number of stations validation FAILED")
+    else:
+        logger.info("✅ Number of stations validation PASSED")
+    # 2️⃣ NEVER SKIP LIST VALIDATION
+    missing_never_skip = set(NEVER_SKIP_LIST) - polygon_unique_stations
+    if missing_never_skip:
+        logger.warning(f"⚠️ NEVER_SKIP_LIST stations missing in final data: {missing_never_skip}")
+    else:
+        logger.info("✅ All NEVER_SKIP_LIST stations present.")
+    # 3️⃣ ISOLATED STATION VALIDATION
+    isolated_stations = set(station_info_df[station_info_df['type'] == 'isolated']['station'])
+    if len(isolated_stations)>0:
+
+        logger.warning(f"⚠️ ISOLATED STATION VALIDATION FAILED... There are total : {len(isolated_stations)} isolated ")
+        print("\t ===========LIST OF ISOLATED STATIONS=========")
+        for idx, row in isolated_stations:
+            print(f"\t \t No {idx+1}: {row['station']}")
+    else:
+        logger.info("✅ ISOLATED STATION VALIDATION PASSED")       
+    
+    logger.info("✅ STAGE 02 VALIDATION complete.")

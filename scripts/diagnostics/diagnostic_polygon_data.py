@@ -30,7 +30,7 @@ def calculate_linestring_length(coords):
     return sum(euclidean(coords[i], coords[i + 1]) for i in range(len(coords) - 1))
 
 def main():
-    file_path = "D:/PhD/dec2025/data/raw/linie_mit_polygon.csv"
+    file_path = "D:/PhD/dec2025/data/processed/filtered_sub_network_data.csv"
 
     try:
         df = pd.read_csv(file_path, sep=";", encoding="utf-8", engine="python")
@@ -44,20 +44,7 @@ def main():
     all_stations = set(start_ops).union(set(end_ops))
     logger.info(f"\n📌 Toplam benzersiz istasyon sayısı: {len(all_stations)}\n")
 
-    # Her istasyonun kaç farklı koordinatla temsil edildiğini analiz et
-    station_coords = defaultdict(set)
-    for _, row in df.iterrows():
-        coords = parse_coords(row["Geo shape"])
-        if not coords:
-            continue
-        if pd.notna(row["START_OP"]):
-            station_coords[row["START_OP"]].add(tuple(coords[0]))
-        if pd.notna(row["END_OP"]):
-            station_coords[row["END_OP"]].add(tuple(coords[-1]))
-
-    logger.info("🔍 Her bir istasyonun temsil edildiği farklı koordinat sayısı:")
-    for station, coord_set in sorted(station_coords.items()):
-        logger.info(f"  {station}: {len(coord_set)}")
+    
 
     # Her satır için mesafe hesapla
     distances = []
