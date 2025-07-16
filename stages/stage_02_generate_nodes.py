@@ -82,5 +82,25 @@ def run(debug=False):
             print(f"\t \t No {idx+1}: {row['station']}")
     else:
         logger.info("✅ ISOLATED STATION VALIDATION PASSED")       
+    # 4️⃣ ENTRY NODE COUNT VALIDATION
     
+    mismatch_stations = []
+
+    for idx, row in station_info_df.iterrows():
+        expected_count = sum(len(v) for v in row['connected_stations'].values())  # toplam bağlı istasyon sayısı
+        actual_count = len(row['entry_nodes'])  # yaratılmış entry node sayısı
+        
+        if expected_count != actual_count:
+            mismatch_stations.append({
+                'Station': row['station'],
+                'Expected': expected_count,
+                'Actual': actual_count
+            })
+
+    if mismatch_stations:
+        logger.warning(f"⚠️ {len(mismatch_stations)} stations with mismatched entry node count:")
+        for mismatch in mismatch_stations:
+            logger.warning(f"   {mismatch['Station']}: Expected {mismatch['Expected']} but found {mismatch['Actual']}")
+    else:
+        logger.info("✅ All stations have correct number of entry nodes.")
     logger.info("✅ STAGE 02 VALIDATION complete.")

@@ -3,10 +3,10 @@ from pathlib import Path
 LINE_ID_LIST = [850, 751, 710, 650, 540, 450, 250, 100, 501, 500,
                 722, 723, 720, 890, 900, 150, 200, 210, 410, 250, 400, 452, 451]
 NEVER_SKIP_LIST = ['LZ', 'BS', 'BN', 'ZUE', 'LS', 'GE'] #, 'ABOW', 'ABO', 'RTR'
-MIN_PLATFORM_LENGTH = 200         # meters
-MAX_PLATFORM_LENGTH = 500         # meters
-DEFAULT_PLATFORM_LENGTH = 250     # meters
-ENTRY_OFFSET_BUFFER = 300         # meters
+MIN_PLATFORM_LENGTH = 300         # meters
+MAX_PLATFORM_LENGTH = 700         # meters
+DEFAULT_PLATFORM_LENGTH = 400     # meters
+ENTRY_OFFSET_BUFFER = 500         # meters
 MIN_MAIN_LINE_LENGTH = 400        # meters
 MAX_PLATFORM_COUNT = 20           # meters
 MIN_PLATFORM_COUNT = 2            # meters

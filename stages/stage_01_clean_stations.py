@@ -135,12 +135,16 @@ def run(debug=False):
 
     
     print(f"\n⚠️ Found {len(duplicates)} duplicate rows BEFORE final_df (counting all occurrences):")
+    
+
     final_df = pd.concat(all_processed_dfs, ignore_index=True)
     duplicates_final = final_df[final_df.duplicated(subset=['Linie', 'START_OP', 'END_OP', 'KM START', 'KM END'], keep=False)]
 
 
     if not duplicates_final.empty:
         print(f"\n⚠️ Found {len(duplicates_final)} duplicate rows AFTER final_df (counting all occurrences):")
+    final_df.sort_values(by=['Linie', 'KM START'], inplace=True)
+    final_df.reset_index(drop=True, inplace=True)
     final_df.to_csv(FILTERED_SUB_NETWORK_POLYGON_FILE, index=False, sep=';', encoding='utf-8-sig')
     logger.info(f"\n✍️ Combined file saved at: {FILTERED_SUB_NETWORK_POLYGON_FILE.resolve()}")
     logger.info(f"🏁 Stage 01 segment cleaning completed. Total segments: {len(final_df)}")
