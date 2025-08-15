@@ -1,10 +1,11 @@
 # diagnostic_multi_entry_point_approach_map.py
-import pandas as pd
-import folium
+import ast
 import json
 import logging
 import re
-import ast
+
+import folium
+import pandas as pd
 from pyproj import Transformer
 
 # ────────────────────────────────
@@ -65,7 +66,7 @@ def parse_pair(s):
     """
     if pd.isna(s):
         raise ValueError("empty coord")
-    nums = re.findall(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?', str(s))
+    nums = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", str(s))
     if len(nums) < 2:
         raise ValueError(f"could not parse two numbers from {s!r}")
     return float(nums[0]), float(nums[1])
@@ -93,7 +94,7 @@ def in_switzerland(lat, lon):
 station_df = pd.read_csv(station_info_path, delimiter=";")
 segment_df = pd.read_csv(segment_data_path, delimiter=";")
 try:
-    perronkante_df = pd.read_csv(perronkante_path, delimiter=";", on_bad_lines='skip')
+    perronkante_df = pd.read_csv(perronkante_path, delimiter=";", on_bad_lines="skip")
     logging.info("✅ perronkante.csv başarıyla okundu.")
 except Exception as e:
     logging.error(f"❌ perronkante.csv okunamadı: {e}")
@@ -102,7 +103,7 @@ except Exception as e:
 # ────────────────────────────────
 # ✅ Harita başlat
 # ────────────────────────────────
-m = folium.Map(location=[46.8, 8.3], zoom_start=8, tiles='cartodbpositron')
+m = folium.Map(location=[46.8, 8.3], zoom_start=8, tiles="cartodbpositron")
 
 # ────────────────────────────────
 # ✅ Segmentleri çiz
@@ -110,12 +111,12 @@ m = folium.Map(location=[46.8, 8.3], zoom_start=8, tiles='cartodbpositron')
 seg_ok, seg_fail = 0, 0
 for _, row in segment_df.iterrows():
     try:
-        coords_raw = safe_json_or_literal(row.get('_coordinates'))
+        coords_raw = safe_json_or_literal(row.get("_coordinates"))
         if not coords_raw:
             # Bazı dosyalarda _coordinates yoksa Geo shape'ten de deneyebiliriz
-            coords_raw = safe_json_or_literal(row.get('Geo shape', ''))
+            coords_raw = safe_json_or_literal(row.get("Geo shape", ""))
             if isinstance(coords_raw, dict):
-                coords_raw = coords_raw.get('coordinates', None)
+                coords_raw = coords_raw.get("coordinates", None)
 
         if not coords_raw or len(coords_raw) < 2:
             raise ValueError("no coordinates")
@@ -125,16 +126,24 @@ for _, row in segment_df.iterrows():
             lat, lon = ensure_latlon(x, y)
             points.append((lat, lon))
 
-        folium.PolyLine(points, color='blue', weight=2, opacity=0.7).add_to(m)
+        folium.PolyLine(points, color="blue", weight=2, opacity=0.7).add_to(m)
 
         # Start & End noktaları (sariler)
         folium.CircleMarker(
-            location=points[0], radius=4, color='yellow', fill=True, fill_color='yellow',
-            tooltip=f"START: {row.get('START_OP', '')}"
+            location=points[0],
+            radius=4,
+            color="yellow",
+            fill=True,
+            fill_color="yellow",
+            tooltip=f"START: {row.get('START_OP', '')}",
         ).add_to(m)
         folium.CircleMarker(
-            location=points[-1], radius=4, color='yellow', fill=True, fill_color='yellow',
-            tooltip=f"END: {row.get('END_OP', '')}"
+            location=points[-1],
+            radius=4,
+            color="yellow",
+            fill=True,
+            fill_color="yellow",
+            tooltip=f"END: {row.get('END_OP', '')}",
         ).add_to(m)
         seg_ok += 1
     except Exception as e:
@@ -148,23 +157,25 @@ logging.info(f"Segments drawn: ok={seg_ok}, failed={seg_fail}")
 entry_ok, entry_fail = 0, 0
 for _, row in station_df.iterrows():
     try:
-        entry_nodes_raw = safe_json_or_literal(row.get('entry_nodes'))
+        entry_nodes_raw = safe_json_or_literal(row.get("entry_nodes"))
         if not entry_nodes_raw:
             continue
         for node in entry_nodes_raw:
-            coords = node.get('Coordinates')
+            coords = node.get("Coordinates")
             if not coords or len(coords) < 2:
                 continue
             x, y = coords[0], coords[1]
             lat, lon = ensure_latlon(x, y)
             folium.Marker(
                 location=(lat, lon),
-                icon=folium.Icon(color='black', icon='remove', prefix='fa'),
-                tooltip=f"ENTRY: {node.get('Connected Station','?')} ({node.get('Direction','?')})"
+                icon=folium.Icon(color="black", icon="remove", prefix="fa"),
+                tooltip=f"ENTRY: {node.get('Connected Station','?')} ({node.get('Direction','?')})",
             ).add_to(m)
             entry_ok += 1
     except Exception as e:
-        logging.warning(f"Entry node plot error on station {row.get('station', 'unknown')}: {e}")
+        logging.warning(
+            f"Entry node plot error on station {row.get('station', 'unknown')}: {e}"
+        )
         entry_fail += 1
 logging.info(f"Entry nodes drawn: ok={entry_ok}, failed={entry_fail}")
 
@@ -175,8 +186,8 @@ pk_ok, pk_fail = 0, 0
 if not perronkante_df.empty:
     for idx, row in perronkante_df.iterrows():
         try:
-            x1, y1 = parse_pair(row['1_coord'])
-            x2, y2 = parse_pair(row['2_coord'])
+            x1, y1 = parse_pair(row["1_coord"])
+            x2, y2 = parse_pair(row["2_coord"])
 
             latlon1 = ensure_latlon(x1, y1)
             latlon2 = ensure_latlon(x2, y2)
@@ -193,27 +204,24 @@ if not perronkante_df.empty:
             folium.CircleMarker(
                 location=latlon1,
                 radius=6,
-                color='red',
+                color="red",
                 fill=True,
-                fill_color='red',
+                fill_color="red",
                 fill_opacity=1.0,
-                tooltip=f"Platform: {platform_label}"
+                tooltip=f"Platform: {platform_label}",
             ).add_to(m)
 
             folium.CircleMarker(
                 location=latlon2,
                 radius=6,
-                color='red',
+                color="red",
                 fill=True,
-                fill_color='red',
-                fill_opacity=1.0
+                fill_color="red",
+                fill_opacity=1.0,
             ).add_to(m)
 
             folium.PolyLine(
-                locations=[latlon1, latlon2],
-                color='red',
-                weight=2,
-                opacity=0.8
+                locations=[latlon1, latlon2], color="red", weight=2, opacity=0.8
             ).add_to(m)
 
             pk_ok += 1

@@ -8,10 +8,10 @@ Diagnostic script for inspecting segment polygon lengths in filtered_sub_network
 ✅ Designed for Windows local execution
 """
 
-import pandas as pd
-import numpy as np
 import logging
 import os
+
+import pandas as pd
 
 # === CONFIG ===
 CSV_PATH = r"D:\PhD\dec2025\data\processed\filtered_sub_network_data.csv"
@@ -21,6 +21,7 @@ LOG_LEVEL = logging.INFO
 # === Setup Logging ===
 logging.basicConfig(level=LOG_LEVEL, format="%(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def load_data(filepath):
     """
@@ -45,10 +46,12 @@ def load_data(filepath):
 
     return df
 
+
 def print_header(title):
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print(f"{title.center(80)}")
-    print("="*80)
+    print("=" * 80)
+
 
 def main():
     df = load_data(CSV_PATH)
@@ -64,23 +67,36 @@ def main():
 
     # Top 10 shortest
     print_header("🔻 10 Shortest Segments by Polygon Length")
-    print(df_sorted[["START_OP", "END_OP", "polygon_length"]].head(10).to_string(index=False))
+    print(
+        df_sorted[["START_OP", "END_OP", "polygon_length"]]
+        .head(10)
+        .to_string(index=False)
+    )
 
     # Top 10 longest
     print_header("🔺 10 Longest Segments by Polygon Length")
-    print(df_sorted[["START_OP", "END_OP", "polygon_length"]].tail(10).to_string(index=False))
+    print(
+        df_sorted[["START_OP", "END_OP", "polygon_length"]]
+        .tail(10)
+        .to_string(index=False)
+    )
 
     # Segments below threshold
     short_segments = df_sorted[df_sorted["polygon_length"] < SHORTNESS_THRESHOLD]
 
     print_header(f"⚠️ Segments shorter than {SHORTNESS_THRESHOLD} meters")
-    print(short_segments[["START_OP", "END_OP", "polygon_length"]].to_string(index=False))
+    print(
+        short_segments[["START_OP", "END_OP", "polygon_length"]].to_string(index=False)
+    )
     print(f"\nTotal short segments found: {len(short_segments)}")
 
     # Optional: export for debugging
-    debug_path = os.path.join(os.path.dirname(CSV_PATH), "diagnostic_short_segments.csv")
+    debug_path = os.path.join(
+        os.path.dirname(CSV_PATH), "diagnostic_short_segments.csv"
+    )
     short_segments.to_csv(debug_path, index=False)
     logger.info(f"Diagnostic file saved: {debug_path}")
+
 
 if __name__ == "__main__":
     main()

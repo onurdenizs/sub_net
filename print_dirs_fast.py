@@ -1,4 +1,6 @@
-import os, sys, pathlib
+import os
+import pathlib
+import sys
 
 ROOT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
 MAX_DEPTH = int(sys.argv[2]) if len(sys.argv) > 2 else 4
@@ -18,6 +20,6 @@ for cur, dirs, files in os.walk(ROOT):
 
     # Yazdır (sadece klasör adları)
     for i, d in enumerate(sorted(dirs, key=str.lower)):
-        is_last = (i == len(dirs) - 1)
+        is_last = i == len(dirs) - 1
         prefix = "│   " * rel_depth + ("└── " if is_last else "├── ")
         print(prefix + d)

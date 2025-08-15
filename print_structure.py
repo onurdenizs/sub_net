@@ -9,15 +9,16 @@ Usage:
 """
 
 import argparse
-import os
 from pathlib import Path
-from typing import Iterable, List, Set
+from typing import List, Set
 
 DEFAULT_EXCLUDES = {".git", "__pycache__", ".ipynb_checkpoints"}
+
 
 def should_exclude(name: str, exclude_set: Set[str]) -> bool:
     # Exclude if exact match of a directory/file name (case-insensitive on Windows)
     return name.lower() in {e.lower() for e in exclude_set}
+
 
 def list_dir(path: Path) -> (List[Path], List[Path]):
     dirs, files = [], []
@@ -29,9 +30,14 @@ def list_dir(path: Path) -> (List[Path], List[Path]):
                 files.append(p)
     except PermissionError:
         return [], []
-    return sorted(dirs, key=lambda x: x.name.lower()), sorted(files, key=lambda x: x.name.lower())
+    return sorted(dirs, key=lambda x: x.name.lower()), sorted(
+        files, key=lambda x: x.name.lower()
+    )
 
-def build_tree_lines(root: Path, max_depth: int, exclude: Set[str], include_files: bool) -> List[str]:
+
+def build_tree_lines(
+    root: Path, max_depth: int, exclude: Set[str], include_files: bool
+) -> List[str]:
     lines: List[str] = []
     total_dirs = 0
     total_files = 0
@@ -71,13 +77,28 @@ def build_tree_lines(root: Path, max_depth: int, exclude: Set[str], include_file
     lines.append(f"📦 Summary: {total_dirs} dirs, {total_files} files")
     return lines
 
+
 def main():
     parser = argparse.ArgumentParser(description="Print a directory tree structure.")
     parser.add_argument("root", type=str, help="Root directory to print.")
-    parser.add_argument("--max-depth", type=int, default=None, help="Maximum depth to traverse (default: no limit).")
-    parser.add_argument("--exclude", nargs="*", default=[], help="Names of dirs/files to exclude (space-separated).")
-    parser.add_argument("--no-files", action="store_true", help="Do not list files, only directories.")
-    parser.add_argument("--out", type=str, default=None, help="Optional output .txt file path.")
+    parser.add_argument(
+        "--max-depth",
+        type=int,
+        default=None,
+        help="Maximum depth to traverse (default: no limit).",
+    )
+    parser.add_argument(
+        "--exclude",
+        nargs="*",
+        default=[],
+        help="Names of dirs/files to exclude (space-separated).",
+    )
+    parser.add_argument(
+        "--no-files", action="store_true", help="Do not list files, only directories."
+    )
+    parser.add_argument(
+        "--out", type=str, default=None, help="Optional output .txt file path."
+    )
     args = parser.parse_args()
 
     root = Path(args.root).expanduser()
@@ -104,6 +125,7 @@ def main():
             out_path = root / out_path
         out_path.write_text(text, encoding="utf-8")
         print(f"\n✅ Saved to: {out_path}")
+
 
 if __name__ == "__main__":
     main()

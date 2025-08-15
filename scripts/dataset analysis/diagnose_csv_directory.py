@@ -1,4 +1,5 @@
 import os
+
 import pandas as pd
 
 # ─────────────────────────────────────────────────────
@@ -7,12 +8,13 @@ import pandas as pd
 CSV_DIRECTORY = "D:/PhD/dec2025/data/raw"  # 🔧 Change this as needed
 OUTPUT_FILENAME = "raw_dataset_info.txt"
 
+
 # ─────────────────────────────────────────────────────
 # Diagnostics
 # ─────────────────────────────────────────────────────
 def diagnose_csv(path):
     try:
-        df = pd.read_csv(path, sep=';', low_memory=False)
+        df = pd.read_csv(path, sep=";", low_memory=False)
     except Exception as e:
         return f"❌ Error reading file: {path}\nReason: {e}\n{'─'*60}\n"
 
@@ -23,17 +25,18 @@ def diagnose_csv(path):
     report.append(f"📄 File Name : {os.path.basename(path)}")
     report.append(f"🔢 Number of Rows : {len(df)}")
 
-    report.append(f"\n📌 Column Titles:")
+    report.append("\n📌 Column Titles:")
     report.append(str(df.columns.tolist()))
 
-    report.append(f"\n🧬 Column Data Types:")
+    report.append("\n🧬 Column Data Types:")
     report.append(str(df.dtypes))
 
-    report.append(f"\n🔍 First 5 Rows:")
+    report.append("\n🔍 First 5 Rows:")
     report.append(str(df.head()))
 
     report.append("─" * 60 + "\n")
     return "\n".join(report)
+
 
 # ─────────────────────────────────────────────────────
 # Main
@@ -59,6 +62,7 @@ def main():
         f.write("\n".join(all_reports))
 
     print(f"✅ All diagnostics saved to: {output_path}")
+
 
 if __name__ == "__main__":
     main()

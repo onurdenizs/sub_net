@@ -1,10 +1,12 @@
 import os
+
 import pandas as pd
 
 # ────────────────────────────────────────────────
 # Config
 # ────────────────────────────────────────────────
 CSV_PATH = "D:\PhD\dec2025\data\raw\linie_mit_polygon.csv"
+
 
 # ────────────────────────────────────────────────
 # Diagnostics
@@ -14,21 +16,22 @@ def diagnose_csv(path):
         print(f"❌ File not found: {path}")
         return
 
-    df = pd.read_csv(path, sep=';', low_memory=False)
+    df = pd.read_csv(path, sep=";", low_memory=False)
 
     print("🧾 CSV Diagnostics Report")
     print("────────────────────────────")
     print(f"📂 File Path : {path}")
     print(f"📄 File Name : {os.path.basename(path)}")
     print(f"🔢 Number of Rows : {len(df)}")
-    print(f"\n📌 Column Titles:")
+    print("\n📌 Column Titles:")
     print(df.columns.tolist())
 
-    print(f"\n🧬 Column Data Types:")
+    print("\n🧬 Column Data Types:")
     print(df.dtypes)
 
-    print(f"\n🔍 First 5 Rows:")
+    print("\n🔍 First 5 Rows:")
     print(df.head())
+
 
 # ────────────────────────────────────────────────
 # Main

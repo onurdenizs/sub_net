@@ -1,36 +1,40 @@
-import pandas as pd
 import json
-import folium
-from folium.plugins import MarkerCluster
 import logging
+
+import folium
+import pandas as pd
+from folium.plugins import MarkerCluster
 from pyproj import Transformer
 
 from utils.constants import (
     FILTERED_SUB_NETWORK_POLYGON_FILE,
+    STATION_ENTRY_NODE_FILE,
     STATION_HELPER_FILE,
-    STATION_ENTRY_NODE_FILE
 )
+
 
 def parse_geo_shape(geo_shape_str):
     try:
         geojson = json.loads(geo_shape_str.replace("'", '"'))
-        return geojson['coordinates']
+        return geojson["coordinates"]
     except Exception as e:
         logging.warning(f"⚠️ Failed to parse geo shape: {e}")
         return []
+
 
 def transform_coords(coord_list, transformer):
     """Transform list of [x, y] from EPSG:2056 to [lat, lon] EPSG:4326."""
     return [list(transformer.transform(x, y)[::-1]) for x, y in coord_list]
 
+
 def plot_station_diagnostics():
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     logging.info("🚀 Loading data...")
 
     try:
-        polygon_df = pd.read_csv(FILTERED_SUB_NETWORK_POLYGON_FILE, delimiter=';')
+        polygon_df = pd.read_csv(FILTERED_SUB_NETWORK_POLYGON_FILE, delimiter=";")
         station_df = pd.read_csv(STATION_HELPER_FILE)
-        with open(STATION_ENTRY_NODE_FILE, 'r', encoding='utf-8') as f:
+        with open(STATION_ENTRY_NODE_FILE, "r", encoding="utf-8") as f:
             entry_nodes = json.load(f)
     except Exception as e:
         logging.error(f"❌ Failed to load input files: {e}")
@@ -45,26 +49,25 @@ def plot_station_diagnostics():
     # Plot GeoShapes (red polylines)
     logging.info("🔴 Plotting segment lines...")
     for idx, row in polygon_df.iterrows():
-        coords = parse_geo_shape(row.get('Geo shape', ''))
+        coords = parse_geo_shape(row.get("Geo shape", ""))
         if coords:
             transformed_coords = transform_coords(coords, transformer)
             folium.PolyLine(
-                locations=transformed_coords,
-                color='red',
-                weight=2,
-                opacity=0.7
+                locations=transformed_coords, color="red", weight=2, opacity=0.7
             ).add_to(m)
 
     # Plot center coordinates (blue X + station code)
     logging.info("🔵 Plotting station centers...")
     for idx, row in station_df.iterrows():
-        center = row.get('center_coordinates')
-        station = row.get('station')
+        center = row.get("center_coordinates")
+        station = row.get("station")
         if isinstance(center, str):
             try:
                 center = json.loads(center.replace("'", '"'))
             except Exception as e:
-                logging.warning(f"⚠️ Failed to parse center_coordinates for {station}: {e}")
+                logging.warning(
+                    f"⚠️ Failed to parse center_coordinates for {station}: {e}"
+                )
                 continue
         if center:
             latlon = transformer.transform(center[0], center[1])[::-1]
@@ -72,7 +75,7 @@ def plot_station_diagnostics():
                 location=latlon,
                 icon=folium.DivIcon(
                     html=f'<div style="color:blue;font-size:12px;">✕ {station}</div>'
-                )
+                ),
             ).add_to(marker_cluster)
 
     # Plot entry nodes (yellow circles)
@@ -84,14 +87,15 @@ def plot_station_diagnostics():
                 folium.CircleMarker(
                     location=latlon,
                     radius=4,
-                    color='yellow',
+                    color="yellow",
                     fill=True,
-                    fill_opacity=0.9
+                    fill_opacity=0.9,
                 ).add_to(m)
 
-    output_file = 'station_diagnostics_map.html'
+    output_file = "station_diagnostics_map.html"
     m.save(output_file)
     logging.info(f"✅ Interactive map saved as {output_file}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     plot_station_diagnostics()
