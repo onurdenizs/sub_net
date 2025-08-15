@@ -1,0 +1,113 @@
+D:\PhD\dec2025
+├── .pytest_cache
+│   ├── v
+│   │   └── cache
+│   │       ├── lastfailed
+│   │       └── nodeids
+│   ├── .gitignore
+│   ├── CACHEDIR.TAG
+│   └── README.md
+├── archive
+│   ├── AI Prompts
+│   │   ├── edges.txt
+│   │   ├── stage 0.txt
+│   │   ├── Stage 1.txt
+│   │   └── station_layout.txt
+│   └── print_structure.py
+├── data
+│   ├── interim
+│   ├── processed
+│   │   ├── below_threshold_debug.csv
+│   │   ├── close_unconnected_stations.csv
+│   │   ├── diagnostic_short_segments.csv
+│   │   ├── filtered_debug_output.csv
+│   │   ├── filtered_polygon.csv
+│   │   ├── filtered_sub_network_data.csv
+│   │   ├── removed_segments.csv
+│   │   ├── removed_stations.txt
+│   │   ├── station_distance_matrix_long.csv
+│   │   ├── station_distance_matrix_wide.csv
+│   │   ├── station_entry_nodes.json
+│   │   ├── station_info.csv
+│   │   ├── station_info_master.csv
+│   │   └── station_platform_info.csv
+│   └── raw
+│       ├── 2025-04-04_istdaten.csv
+│       ├── actual_date-world-traffic_point-2025-04-05.csv
+│       ├── actual_date_line_versions_2025-04-05.csv
+│       ├── dienststellen-gemass-opentransportdataswiss.csv
+│       ├── haltestelle-haltekante.csv
+│       ├── haltestellen_2025.csv
+│       ├── ist_daten_sbb.csv
+│       ├── jahresformation.csv
+│       ├── linie-mit-betriebspunkten.csv
+│       ├── linie.csv
+│       ├── linie_mit_polygon.csv
+│       ├── linienkilometrierung.csv
+│       ├── network_raw_data_info.txt
+│       ├── perron.csv
+│       ├── perronkante.csv
+│       ├── perronkante_coord_interactive_map.py
+│       ├── perronkante_epsg4326.csv
+│       ├── perronoberflache.csv
+│       ├── raw_dataset_info.txt
+│       ├── rollmaterial-matching.csv
+│       ├── rollmaterial.csv
+│       ├── sbbs_route_network.csv
+│       └── zugzahlen.csv
+├── output
+├── reports
+├── scripts
+│   ├── dataset analysis
+│   │   ├── diagnose_csv_directory.py
+│   │   └── diagnose_csv_structure.py
+│   ├── diagnostics
+│   │   ├── diagnose_multiple_segments.py
+│   │   ├── diagnostic_dupli_segments.py
+│   │   ├── diagnostic_filtered_geoshape_map.py
+│   │   ├── diagnostic_filtered_poligon_length.py
+│   │   ├── diagnostic_multi_entry_point_approach_map.py
+│   │   ├── diagnostic_perronkante_data.py
+│   │   ├── diagnostic_polygon_data.py
+│   │   └── testo.py
+│   ├── network_scripts
+│   ├── postprocessing
+│   ├── preprocessing
+│   ├── simulation
+│   └── tests
+├── stages
+│   ├── __init__.py
+│   ├── generate_distance_matrix.py
+│   ├── stage01.py
+│   ├── stage_00_prepare_master.py
+│   ├── stage_01_clean_stations.py
+│   └── stage_02_generate_nodes.py
+├── SUMO
+│   └── inputs
+│       └── sub_net
+├── tests
+│   ├── conftest.py
+│   ├── test_platform_ops.py
+│   └── test_segment_ops.py
+├── utils
+│   ├── __init__.py
+│   ├── constants.py
+│   ├── platform_ops.py
+│   └── segment_ops.py
+├── .gitignore
+├── diagnostic_platform_nodes.html
+├── entry_node_diagnostics.py
+├── filtered_line_geoshapes_map.html
+├── linie_mit_polygon_read_errors.log
+├── merge_and_cleanup.sh
+├── multi_entry_node.html
+├── platform_start_end_map.html
+├── print_dirs_fast.py
+├── print_structure.py
+├── README.md
+├── requirements.txt
+├── run_pipeline.py
+├── station_diagnostics_map.html
+└── structure.txt
+
+📦 Summary: 25 dirs, 85 files
