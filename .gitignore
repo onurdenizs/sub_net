@@ -1,15 +1,30 @@
-# Büyük verileri exclude et
-
-
-# Belirli klasörleri exclude et
+# Büyük veriler ve çıktılar
 data/
-
+results/
 output/
-
-# Geçici dosyalar
+logs/
 *.log
 *.tmp
+
+# Ortam dosyaları
+.env/
+.venv/
+.conda/
 
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# VS Code config (kişisel ayarları dışarıda tut)
+.vscode/
+
+# Jupyter kernel ve config
+*.ipynb_checkpoints
+.jupyter/
+
+# OS dosyaları
+.DS_Store
+Thumbs.db
