@@ -39,7 +39,18 @@ CLOSENESS_THRESHOLD = (
     MAX_PLATFORM_LENGTH + ENTRY_OFFSET_BUFFER * 2 + MIN_MAIN_LINE_LENGTH
 )
 
+# --- Station layout parameters -------------------------------------------------
+TRACK_SPACING: float = 4.5  # meters between parallel tracks (center-to-center)
+THROAT_MIN: float = 80.0  # minimum throat length per side (m)
+THROAT_ALPHA: float = 0.28  # throat length ratio w.r.t platform length L (0.25–0.30)
+SMOOTH_LEN: float = 25.0  # single shape-point smoothing length for sharp angles (m)
+TURNBACK_LEN: float = 20.0  # short connector length for turnback edges (m)
+BYPASS_ENABLED: bool = True  # create hub-to-hub bypass edge per station
+LAYOUT_STRATEGY: str = "hybrid"  # 'hybrid': single-entry side uses entry==hub
 
+# NOTE:
+# ENTRY_OFFSET_BUFFER and MIN_MAIN_LINE_LENGTH remain as-is. ENTRY_OFFSET_BUFFER=500 m
+# is typically sufficient to leave room for throats and smoothing.
 PLATFORM_LENGTH_DECISION_METHOD = "X"  # X: maximum platform length, N: for minimum platform length, A: Average platform length D: Default platform length
 FILL_EMPTY_PLATFORM_LENGTH_DATA_WITH = "N"  # D:default platform length, N: Minimum platform length, X: Maximum platform length
 FILL_EMPTY_PLATFORM_NO_DATA_WITH = "N"  # D:default platform count, N: Minimum platform count, X: Maximum platform count
