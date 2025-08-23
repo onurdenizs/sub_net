@@ -3,6 +3,7 @@ import argparse
 # Aşamaları import et
 from stages.stage_01_clean_stations import run as run_stage_01
 from stages.stage_02_generate_nodes import run as run_stage_02
+from stages.stage_03_generate_hubs import run as run_stage_03  # <-- NEW
 
 # from stages.stage_03_generate_edges import run as run_stage_03
 
@@ -10,7 +11,7 @@ from stages.stage_02_generate_nodes import run as run_stage_02
 STAGES = {
     1: ("Stage 01 - Clean Stations", run_stage_01),
     2: ("Stage 02 - Generate Nodes", run_stage_02),
-    # 3: ("Stage 03 - Generate Edges", run_stage_03),
+    3: ("Stage 03 - Generate Hubs & Axis", run_stage_03),  # <-- NEW
 }
 
 
