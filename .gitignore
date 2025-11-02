@@ -1,30 +1,139 @@
-# Büyük veriler ve çıktılar
-data/
-results/
+# ============================================================
+# 🧩 GENERAL PYTHON ENVIRONMENT
+# ============================================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+.env
+.env*/
+.venv/
+venv/
+.idea/
+.vscode/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.cache/
+*.log
+*.tmp
+*.bak
+
+# ============================================================
+# 🧠 NOTEBOOKS & TESTS
+# ============================================================
+*.ipynb
+*.ipynb_checkpoints/
+notebooks/
+tests/__pycache__/
+tests/.pytest_cache/
+
+# ============================================================
+# ⚙️ BUILD & TEMP OUTPUTS
+# ============================================================
+build/
+dist/
 output/
+results/
+reports/
+archive/
+scripts/
 logs/
 *.log
 *.tmp
+*.bak
+*.json
+*.yaml
+*.yml
 
-# Ortam dosyaları
+# ============================================================
+# 📦 DATA & PIPELINE FILES
+# ============================================================
+data/temp/
+data/tmp/
+data/debug/
+data/diagnostics/
+data/raw_backup/
+data/snapshots/
+data/test_datasets/
+*.csv
+*.parquet
+*.pkl
+*.feather
+*.geojson
+
+# Keep only essential processed datasets
+!data/processed/station_info_master.csv
+!data/processed/station_design_master.csv
+!data/processed/filtered_sub_network_data.csv
+
+# ============================================================
+# 🚉 SUMO & GIS ARTIFACTS
+# ============================================================
+SUMO/
+*.net.xml
+*.rou.xml
+*.nod.xml
+*.edg.xml
+*.add.xml
+*.sumocfg
+*.poly.xml
+*.html
+*.svg
+*.osm
+*.shp
+*.shx
+*.dbf
+*.prj
+*.geojson
+*.qgz
+*.qgs
+*.gpkg
+*.tif
+*.tfw
+
+# ============================================================
+# 🧩 TOOLS & SCRIPTS
+# ============================================================
+merge_and_cleanup.sh
+*.bat
+*.ps1
+*.command
+
+# ============================================================
+# 🧭 DIAGNOSTICS & VISUALIZATIONS
+# ============================================================
+station_diagnostics_map.html
+diagnostic_platform_nodes.html
+filtered_line_geoshapes_map.html
+platform_start_end_map.html
+multi_entry_node.html
+linie_mit_polygon_read_errors.log
+*.log
+*.txt
+*.html
+
+# ============================================================
+# 🔧 ENVIRONMENT & CONFIG FILES
+# ============================================================
 .env/
-.venv/
 .conda/
+environment.yml
+requirements-dev.txt
+*.toml
+*.cfg
+*.ini
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.ipynb_checkpoints/
-
-# VS Code config (kişisel ayarları dışarıda tut)
-.vscode/
-
-# Jupyter kernel ve config
-*.ipynb_checkpoints
-.jupyter/
-
-# OS dosyaları
+# ============================================================
+# 🧰 SYSTEM & EDITOR FILES
+# ============================================================
 .DS_Store
 Thumbs.db
+desktop.ini
+~$*
+*.swp
+*.swo
