@@ -1,4 +1,31 @@
+# -*- coding: utf-8 -*-
+"""
+Stage 01 — Clean and analyze line segment geometries.
+
+Reads:
+  - data/raw/linie_mit_polygon.csv
+
+Writes:
+  - data/processed/filtered_sub_network_data.csv
+
+What it does:
+  1) Filters to the configured LINE_ID_LIST.
+  2) Parses each segment's GeoJSON-like "Geo shape" into coordinate arrays.
+  3) Computes length and point-count per segment.
+  4) For each line (Linie), walks segments in KM order and:
+     - merges/removes segments shorter than CLOSENESS_THRESHOLD,
+     - respects NEVER_SKIP_LIST so certain stations are preserved,
+     - re-evaluates after merges to avoid chain-short leftovers.
+  5) Saves the cleaned subset and runs simple validations.
+
+Run (only Stage 01 via pipeline):
+  python run_pipeline.py --start 1 --end 1 --debug
+"""
+
+from __future__ import annotations
+
 import logging
+from typing import List, Tuple
 
 import pandas as pd
 
@@ -16,106 +43,140 @@ from utils.segment_ops import (
     remove_last_segment,
 )
 
-# ------------------------
-# Logging setup
-# ------------------------
+# ------------------------------------------------------------------------------
+# Logging
+# ------------------------------------------------------------------------------
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 if not logger.hasHandlers():
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    _h = logging.StreamHandler()
+    _h.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+    logger.addHandler(_h)
 
 
-# ------------------------
-# Utility Functions
-# ------------------------
-def print_all_segments(segment_df: pd.DataFrame):
-    print(f"Number of Total segments found: {len(segment_df)}")
-    print(segment_df.columns)
+# ------------------------------------------------------------------------------
+# Debug helper (optional)
+# ------------------------------------------------------------------------------
+def _print_all_segments(segment_df: pd.DataFrame) -> None:
+    """Print a quick listing of segments (for ad-hoc debugging)."""
+    logger.debug("Number of total segments: %d", len(segment_df))
+    logger.debug("Columns: %s", list(segment_df.columns))
     for i in range(len(segment_df)):
         row = segment_df.iloc[i]
-        print(
-            f"Segment no: {i+1}   {row['START_OP']} - {row['END_OP']} {row['polygon_length']}"
+        logger.debug(
+            "Segment #%d: %s - %s | length=%.2f",
+            i + 1,
+            row.get("START_OP"),
+            row.get("END_OP"),
+            row.get("polygon_length"),
         )
 
 
-# ------------------------
-# Main Stage 01
-# ------------------------
-def choose_action(i, segment_df: pd.DataFrame, threshold: int, never_skip: list):
-    row = segment_df.iloc[i]
-    start, end, length = row["START_OP"], row["END_OP"], row["polygon_length"]
-    # logger.info(f"\n🧩 Processing segment {start} - {end} (index {i})")
+# ------------------------------------------------------------------------------
+# Core decision for each segment
+# ------------------------------------------------------------------------------
+def choose_action(
+    i: int, segment_df: pd.DataFrame, threshold: float, never_skip: List[str]
+) -> Tuple[pd.DataFrame, int]:
+    """
+    Decide what to do with the current segment at index i:
+      - Keep if long enough.
+      - If short, try merging forward/backward, or remove when allowed.
+      - Respect NEVER_SKIP_LIST stations to avoid removing critical endpoints.
 
-    # if the segment is long enough
+    Returns:
+      (possibly-updated DataFrame, next index to process)
+    """
+    row = segment_df.iloc[i]
+    start = row["START_OP"]
+    end = row["END_OP"]
+    length = row["polygon_length"]
+
+    # Keep long-enough segments
     if length >= threshold:
-        # logger.info(f"✅ Segment: {start} - {end} is long enough. Keeping it.")
         return segment_df, i + 1
 
-    # if the segment is SHORT
-    else:
-        # logger.info("👷 Segment is SHORT.")
-        first = is_first_segment(i)
-        last = is_last_segment(i, segment_df)
-        if (
-            first and not last
-        ):  # IF THE SEGMENT IS FIRST SEGMENT AND NOT THE ONLY SEGMENT
-            if end not in never_skip:
-                # logger.debug("🗑️ First segment → combine_next_segment.")
-                return combine_next_segment(segment_df, i, logger)
-            elif end in never_skip and start not in never_skip:
-                # logger.debug("🗑️ First segment → remove_first_segment.")
-                return remove_first_segment(segment_df), i
+    # Handle short segments
+    first = is_first_segment(i)
+    last = is_last_segment(i, segment_df)
 
-        if not first and not last:  # IF THE SEGMENT IS MID SEGMENT
+    # Case A: First segment (but not the only one)
+    if first and not last:
+        if end not in never_skip:
+            # Merge forward
+            return combine_next_segment(segment_df, i, logger)
+        elif end in never_skip and start not in never_skip:
+            # Drop first
+            return remove_first_segment(segment_df), i
 
-            if end not in never_skip:
-                # logger.debug("🗑️ Mid segment → combine_next_segment.")
-                return combine_next_segment(segment_df, i, logger)
-            elif end in never_skip and start not in never_skip:
-                # logger.debug("🗑️ Mid segment → combine_previous_segment.")
-                return combine_previous_segment(segment_df, i, logger)
+    # Case B: Middle segment
+    if not first and not last:
+        if end not in never_skip:
+            # Merge forward
+            return combine_next_segment(segment_df, i, logger)
+        elif end in never_skip and start not in never_skip:
+            # Merge backward
+            return combine_previous_segment(segment_df, i, logger)
 
-        if last and not first:  # IF THE SEGMENT IS LAST SEGMENT
-            if start not in never_skip:
-                # logger.debug("🗑️ Last segment → combine_previous_segment.")
-                return combine_previous_segment(segment_df, i, logger)
-            if start in never_skip and end not in never_skip:
-                # logger.debug("🗑️ Last segment → remove_last_segment.")
-                return remove_last_segment(segment_df), i
+    # Case C: Last segment (but not the only one)
+    if last and not first:
+        if start not in never_skip:
+            # Merge backward
+            return combine_previous_segment(segment_df, i, logger)
+        if start in never_skip and end not in never_skip:
+            # Drop last
+            return remove_last_segment(segment_df), i
 
-        if first and last:  # IF THE SEGMENT IS THE ONLY SEGMENT
-            if start not in never_skip and end not in never_skip:
-                # logger.debug("🗑️ ONLY segment → remove_first_segment.")
-                return remove_first_segment(segment_df), i
-            else:
-                # logger.debug("⚠️ Only segment but in NEVER_SKIP_LIST → keeping it.")
-                return segment_df, i + 1
+    # Case D: Only segment in the line
+    if first and last:
+        if start not in never_skip and end not in never_skip:
+            # Drop the only segment if both ends are not protected
+            return remove_first_segment(segment_df), i
+        else:
+            # Keep protected singleton
+            return segment_df, i + 1
 
+    # Fallback: move on
     return segment_df, i + 1
 
 
-def run(debug=False):
+# ------------------------------------------------------------------------------
+# Stage 01 runner
+# ------------------------------------------------------------------------------
+def run(debug: bool = False) -> None:
+    """
+    Execute Stage 01:
+      - Load + filter input
+      - Parse geometry & compute metrics
+      - Per-line short-segment cleanup
+      - Save cleaned dataset
+      - Run validations
+    """
+    # De-dup the line list, preserve as a stable iteration set
     LINE_ID_LIST = list(set(CONST_LINE_ID_LIST))
-    logger.info(f"\n🚧 CLOSENESS_THRESHOLD calculated as: {CLOSENESS_THRESHOLD} meters")
-    logger.info("\n🚀 Stage 01 started: Clean and analyze line segment geometries")
 
+    logger.info("🚧 CLOSENESS_THRESHOLD: %.2f meters", CLOSENESS_THRESHOLD)
+    logger.info("🚀 Stage 01 started: Clean and analyze line segment geometries")
+
+    # Ensure output dir exists
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Load
     try:
         df = pd.read_csv(POLYGON_FILE, delimiter=";")
-        logger.info(f"📥 Loaded input file: {POLYGON_FILE} ({len(df)} rows)")
+        logger.info("📥 Loaded: %s (%d rows)", POLYGON_FILE, len(df))
     except Exception as e:
-        logger.error(f"❌ Failed to load input CSV: {e}")
+        logger.error("❌ Failed to load %s: %s", POLYGON_FILE, e)
         return
 
+    # Filter by LINE_ID_LIST
     df = df[df["Linie"].isin(LINE_ID_LIST)].copy()
-    logger.info(f"🔎 Filtered by LINE_ID_LIST: {len(df)} rows remain")
+    logger.info("🔎 Filtered by LINE_ID_LIST → %d rows remain", len(df))
 
+    # Parse geometry and compute metrics
     df["_coordinates"] = df["Geo shape"].apply(parse_geo_shape)
     df["polygon_length"] = df["_coordinates"].apply(calculate_linestring_length)
-    df["number_of_polygon_points"] = df["_coordinates"].apply(lambda x: len(x))
+    df["number_of_polygon_points"] = df["_coordinates"].apply(len)
 
     keep_cols = [
         "Linie",
@@ -130,15 +191,15 @@ def run(debug=False):
     ]
     df = df[keep_cols].reset_index(drop=True)
 
-    all_processed_dfs = []
-
-    for idx, line_id in enumerate(LINE_ID_LIST, 1):
-        logger.info(f"\n📊 Line {idx}/{len(LINE_ID_LIST)} - Linie {line_id}")
+    # Process per line (Linie)
+    all_processed_dfs: List[pd.DataFrame] = []
+    for idx, line_id in enumerate(LINE_ID_LIST, start=1):
+        logger.info("📊 Line %d/%d — Linie=%s", idx, len(LINE_ID_LIST), line_id)
         segment_df = (
             df[df["Linie"] == line_id].sort_values("KM START").reset_index(drop=True)
         )
-        # print_all_segments(segment_df)
 
+        # Walk through segments, merging/removing shorts
         i = 0
         while i < len(segment_df):
             segment_df, i = choose_action(
@@ -146,77 +207,55 @@ def run(debug=False):
             )
 
         all_processed_dfs.append(segment_df)
-        print(f"all_processed_dfs length: {str(len(all_processed_dfs))}")
-    duplicates = df[
-        df.duplicated(
-            subset=["Linie", "START_OP", "END_OP", "KM START", "KM END"], keep=False
-        )
-    ]
 
-    print(
-        f"\n⚠️ Found {len(duplicates)} duplicate rows BEFORE final_df (counting all occurrences):"
-    )
-
+    # Concatenate all lines back together
     final_df = pd.concat(all_processed_dfs, ignore_index=True)
-    duplicates_final = final_df[
-        final_df.duplicated(
-            subset=["Linie", "START_OP", "END_OP", "KM START", "KM END"], keep=False
-        )
-    ]
-
-    if not duplicates_final.empty:
-        print(
-            f"\n⚠️ Found {len(duplicates_final)} duplicate rows AFTER final_df (counting all occurrences):"
-        )
     final_df.sort_values(by=["Linie", "KM START"], inplace=True)
     final_df.reset_index(drop=True, inplace=True)
+
+    # Save
     final_df.to_csv(
         FILTERED_SUB_NETWORK_POLYGON_FILE, index=False, sep=";", encoding="utf-8-sig"
     )
-    logger.info(
-        f"\n✍️ Combined file saved at: {FILTERED_SUB_NETWORK_POLYGON_FILE.resolve()}"
-    )
-    logger.info(
-        f"🏁 Stage 01 segment cleaning completed. Total segments: {len(final_df)}"
-    )
+    logger.info("✍️ Saved: %s", FILTERED_SUB_NETWORK_POLYGON_FILE.resolve())
+    logger.info("🏁 Stage 01 cleaning complete. Total segments: %d", len(final_df))
 
-    # ------------------------
-    # ✅ Final Validation Layer
-    # ------------------------
-    logger.info("\n🔎 Performing final validations...")
+    # --------------------------------------------------------------------------
+    # Final validations
+    # --------------------------------------------------------------------------
+    logger.info("🔎 Final validations...")
 
-    # 1️⃣ LINE_ID validation
+    # 1) LINE_ID presence
     final_line_ids = set(final_df["Linie"].unique())
     missing_line_ids = set(LINE_ID_LIST) - final_line_ids
     extra_line_ids = final_line_ids - set(LINE_ID_LIST)
 
     if missing_line_ids:
-        logger.warning(f"⚠️ Missing LINE_IDs in final output: {missing_line_ids}")
+        logger.warning("⚠️ Missing LINE_IDs in final output: %s", missing_line_ids)
     if extra_line_ids:
-        logger.warning(
-            f"⚠️ Extra LINE_IDs in final output (unexpected): {extra_line_ids}"
-        )
-    logger.info("✅ LINE_ID validation complete.")
+        logger.warning("⚠️ Extra LINE_IDs in final output: %s", extra_line_ids)
+    logger.info("✅ LINE_ID validation done.")
 
-    # 2️⃣ NEVER_SKIP_LIST validation
+    # 2) NEVER_SKIP_LIST presence
     all_ops = set(final_df["START_OP"]).union(final_df["END_OP"])
     missing_never_skip = set(NEVER_SKIP_LIST) - all_ops
     if missing_never_skip:
         logger.warning(
-            f"⚠️ NEVER_SKIP_LIST stations missing in final data: {missing_never_skip}"
+            "⚠️ NEVER_SKIP_LIST stations missing in final data: %s",
+            missing_never_skip,
         )
     else:
         logger.info("✅ All NEVER_SKIP_LIST stations present.")
 
-    # 3️⃣ Polygon length validation
+    # 3) No short segments should remain
     short_segments = final_df[final_df["polygon_length"] < CLOSENESS_THRESHOLD]
     if not short_segments.empty:
         logger.warning(
-            f"⚠️ Segments below closeness threshold ({CLOSENESS_THRESHOLD} m):"
+            "⚠️ Segments below threshold (%.2f m) still exist:", CLOSENESS_THRESHOLD
         )
-        for _, row in short_segments.iterrows():
+        for _, r in short_segments.iterrows():
             logger.warning(
-                f"   {row['START_OP']} - {row['END_OP']} ({row['polygon_length']} m)"
+                "   %s - %s (%.2f m)", r["START_OP"], r["END_OP"], r["polygon_length"]
             )
     else:
         logger.info("✅ No segments below closeness threshold.")

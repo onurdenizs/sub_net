@@ -1,280 +1,326 @@
-# Swiss Railway Network Simulation with Virtual Coupling
+# 🚄 Swiss Railway Network Simulation with Virtual Coupling
 
-This project aims to simulate the Swiss railway network in SUMO (Simulation of Urban MObility) with the ultimate goal of evaluating the impact of **Virtual Coupling (VC)** on operational KPIs such as **capacity**, **energy efficiency**, **emissions**, and **safety**.
+This project simulates the **Swiss railway network** using [**SUMO** (Simulation of Urban MObility)](https://www.eclipse.org/sumo/).  
+It serves as part of an academic research effort to evaluate the impact of **Virtual Coupling (VC)** on railway operations, focusing on **capacity**, **energy efficiency**, **emissions**, and **safety**.
 
-The project is structured as a modular Python pipeline that processes raw Swiss railway data, builds simulation-ready networks, and integrates real-time VC logic using the **TraCI** interface.
-
----
-
-## 🚀 Project Goals
-
-- Parse and clean raw infrastructure datasets (stations, platform edges, tracks)
-- Construct a realistic railway network compatible with SUMO
-- Implement real-time decision-making modules for VC coupling/uncoupling
-- Run comparative simulations of coupled vs. uncoupled train operations
-- Analyze simulation outputs (delays, emissions, power consumption)
+The system is implemented as a **modular, multi-stage Python pipeline** that:
+1. Parses and cleans raw infrastructure data,
+2. Builds a realistic simulation-ready railway network,
+3. Generates geometry layouts, nodes, and edges,
+4. Integrates real-time Virtual Coupling logic through the **TraCI API**.
 
 ---
 
-## 🧱 Project Structure
+## 🎯 Research & Engineering Goals
 
-
-📁 .git
-    📄 COMMIT_EDITMSG
-    📄 FETCH_HEAD
-    📄 HEAD
-    📄 ORIG_HEAD
-    📄 config
-    📄 description
-    📁 hooks
-        📄 applypatch-msg.sample
-        📄 commit-msg.sample
-        📄 fsmonitor-watchman.sample
-        📄 post-update.sample
-        📄 pre-applypatch.sample
-        📄 pre-commit.sample
-        📄 pre-merge-commit.sample
-        📄 pre-push.sample
-        📄 pre-rebase.sample
-        📄 pre-receive.sample
-        📄 prepare-commit-msg.sample
-        📄 push-to-checkout.sample
-        📄 update.sample
-    📄 index
-    📁 info
-        📄 exclude
-    📁 logs
-        📄 HEAD
-        📁 refs
-            📁 heads
-                📄 main
-            📁 remotes
-                📁 origin
-                    📄 main
-    📁 objects
-        📁 01
-            📄 462ddeae86e481c4ad9e6307573e5dfe6b13f4
-        📁 08
-            📄 1fbe24f77e611e97dcf6b0199e3fb89f17c040
-        📁 10
-            📄 9aa2de82659a38dff0766fca9e94c85b4b31db
-        📁 11
-            📄 8db824db4269aa52833e22b3b3fc129c09afe5
-        📁 16
-            📄 b335257e9ea14cdf7b50f76981b1b755ea9dcc
-        📁 25
-            📄 e9b3ac4fba2ab8c916c259c085c4f88f76fa56
-        📁 34
-            📄 85bd4715073b4fe6a7af30cbaf5ef1be1ed51f
-        📁 38
-            📄 482cd0df1db93fa701ad49050bbd2bae107a7b
-            📄 7d74fb7260dc6aee20508b627c564ab5c43164
-        📁 46
-            📄 3c5368ea3ffb2da996479f011cdf58712e0730
-        📁 48
-            📄 23f4a9df10abbe837777aa19f863f470cb6e15
-        📁 4a
-            📄 87824d84b4e5530d976a81f0163a1c75f23d6f
-        📁 4b
-            📄 7607b19d8621628bb845755d8fc4f50814bf5d
-        📁 52
-            📄 71be9cedd5dcb957964343e95fa2ca3e26f262
-        📁 5c
-            📄 51c92bd7b55ddd1f192aae2dce0e725d5da663
-        📁 61
-            📄 85d0c10639dd03acb2eb8b6ed359370b312934
-            📄 f3bd7802b6126cc06672bc2b01a039d9db7b51
-        📁 68
-            📄 4b0401d05e15256793266a7e76122aca32aef9
-        📁 6b
-            📄 66cae997c36a1b3081d3c631672f5c15d0c10f
-        📁 6e
-            📄 24805e9134eeda46c0695cc8623bb41190d357
-        📁 75
-            📄 1cf4ada643c55887ade7ab41d14c4160b45afe
-        📁 7a
-            📄 1d9620b3baffe7a739a2badedda9080f61522f
-        📁 85
-            📄 d97b99994ac5c9fce5798d3fd3974e7062dca7
-        📁 86
-            📄 af832e55e348a684ef6706f22a3fa86ab9220a
-        📁 8f
-            📄 ad25c98547323457ec67b89988b7ef34e9b00b
-        📁 94
-            📄 592698cec9fa9d42633e252ad0abd418fa49b5
-        📁 97
-            📄 dabbbd897a3b5a2f38ed8d3b49d108505d161a
-        📁 9b
-            📄 d8e19d4dc72132e7f2d1daa3ac7297e26e016b
-        📁 a0
-            📄 eab1c65124c802985bbc98f8598c30588bd63e
-        📁 a5
-            📄 6d8309bd6fc6245399f52466b2cfd7f71b6a71
-            📄 9f1dbc17b282dd26cacac69031ef1453bdb7fd
-        📁 b2
-            📄 4c1ad6b9ceb75edae81096cda51daf5d76a8d2
-        📁 c8
-            📄 97be9e81d4676747ee7f7dc5fd167352353e7f
-        📁 d0
-            📄 a08f4b86d39868d0a36c041a765d4307da7799
-        📁 d5
-            📄 a353c0d0091d6fdd640df78fe37f053b916283
-        📁 da
-            📄 7d9bb29a9e3e7e33611f0def7c249b05ab260c
-        📁 dd
-            📄 6fc0a88411f59dde1c517dcb9108ae1b508b0a
-        📁 e2
-            📄 43afead642271ccc4e604f29d9f129d3f456d1
-        📁 e6
-            📄 9de29bb2d1d6434b8b29ae775ad8c2e48c5391
-        📁 e9
-            📄 b12669aa16caefc99a49afab62f2f4cd30d74f
-        📁 ea
-            📄 577de57f201ee45fdce94aea8dbb0278415619
-        📁 ec
-            📄 bcb0cd8908055e6d2101e3664b706d8a6d90ea
-        📁 ee
-            📄 2a27469d5fe8fc7b88743588ffc862a2adc8db
-        📁 info
-        📁 pack
-    📁 refs
-        📁 heads
-            📄 main
-        📁 remotes
-            📁 origin
-                📄 main
-        📁 tags
-            📄 v0.2.0
-📄 .gitignore
-📄 README.md
-📁 SUMO
-    📁 inputs
-        📁 sub_net
-📁 archive
-    📁 AI Prompts
-        📄 Stage 1.txt
-        📄 edges.txt
-        📄 stage 0.txt
-        📄 station_layout.txt
-    📄 print_structure.py
-📁 data
-    📁 interim
-    📁 processed
-    📁 raw
-        📄 2025-04-04_istdaten.csv
-        📄 actual_date-world-traffic_point-2025-04-05.csv
-        📄 actual_date_line_versions_2025-04-05.csv
-        📄 dienststellen-gemass-opentransportdataswiss.csv
-        📄 haltestelle-haltekante.csv
-        📄 haltestellen_2025.csv
-        📄 ist_daten_sbb.csv
-        📄 jahresformation.csv
-        📄 linie-mit-betriebspunkten.csv
-        📄 linie.csv
-        📄 linie_mit_polygon.csv
-        📄 linienkilometrierung.csv
-        📄 network_raw_data_info.txt
-        📄 perron.csv
-        📄 perronkante.csv
-        📄 perronkante_epsg4326.csv
-        📄 perronoberflache.csv
-        📄 raw_dataset_info.txt
-        📄 rollmaterial-matching.csv
-        📄 rollmaterial.csv
-        📄 sbbs_route_network.csv
-        📄 zugzahlen.csv
-📁 output
-📁 reports
-📄 requirements.txt
-📄 run_pipeline.py
-📁 scripts
-    📁 dataset analysis
-        📄 diagnose_csv_directory.py
-        📄 diagnose_csv_structure.py
-    📁 diagnostics
-        📄 diagnostic_perronkante_data.py
-        📄 diagnostic_polygon_data.py
-    📁 network_scripts
-    📁 postprocessing
-    📁 preprocessing
-    📁 simulation
-    📁 tests
-📁 stages
-    📁 __pycache__
-        📄 stage_01_clean_stations.cpython-311.pyc
-    📄 stage_01_clean_stations.py
-📁 tests
-
+- ✅ Clean and standardize Swiss railway datasets (stations, platforms, segments)  
+- ✅ Build a SUMO-compatible rail network reflecting real geometry and topology  
+- ✅ Implement real-time VC logic for coupling / decoupling / safety control  
+- ✅ Run comparative simulations between VC and conventional operations  
+- ✅ Analyze key performance indicators (delay, headway, emissions, energy)
 
 ---
 
-## 📂 Datasets Used
+## 🧠 Project Overview
 
-| File                      | Description                               |
-|---------------------------|-------------------------------------------|
-| `linie_mit_polygon.csv`   | Contains track segments and geometry info |
-| `perronkante.csv`         | Contains platform edge and station info   |
+| Stage | Script | Description |
+|-------|---------|-------------|
+| **Stage 00** | `stage_00_prepare_master.py` | Prepare master datasets, harmonize column names, define constants |
+| **Stage 01** | `stage_01_clean_stations.py` | Filter, merge, and clean raw station and segment data |
+| **Stage 02** | `stage_02_generate_nodes.py` | Generate nodes and entry points for all stations |
+| **Stage 03** | `stage_03_generate_station_layouts.py` | Build station-specific layout definitions |
+| **Stage 04** | `stage_04_generate_station_layout_geometry.py` | Compute geometry and SUMO-ready layouts (edges, nodes, coordinates) |
 
-These datasets are published by [opentransportdata.swiss](https://opentransportdata.swiss) and use **EPSG:2056** projection.
+All stages are orchestrated via the **`run_pipeline.py`** controller, which allows partial or full pipeline execution.
 
 ---
 
-## 🔁 Running the Pipeline
-
-You can run specific stages or the entire pipeline via CLI:
+## 🧱 Repository Structure
 
 ```bash
-python run_pipeline.py --start 1 --end 3
+📦 sub_net/
+│
+├─ stages/                    # All pipeline stages (00–04)
+├─ utils/                     # Core geometry, layout, and GIS utilities
+│   ├─ geo_ops.py
+│   ├─ layout_builders.py
+│   ├─ layout_primitives.py
+│   ├─ polyline_ops.py
+│   └─ constants.py
+│
+├─ tools/                     # Diagnostic / helper scripts
+├─ data/
+│   ├─ raw/                   # Raw opentransportdata.swiss datasets
+│   ├─ processed/             # Cleaned intermediate data
+│   └─ diagnostics/           # Debug or validation outputs
+│
+├─ logs/                      # Runtime logs
+├─ reports/                   # Analytical reports / maps (ignored by Git)
+├─ run_pipeline.py             # Main execution controller
+├─ requirements.txt / environment.yml
+└─ README.md
 
-For example, to run only stage 01:
-python run_pipeline.py --start 1
+---
 
+## 🧭 Datasets
 
-🧪 Diagnostics
+All input data are sourced from **[opentransportdata.swiss](https://opentransportdata.swiss)** and projected in **EPSG:2056 (CH1903+)**.
 
-Diagnostic scripts can be found in the scripts/diagnostics/ folder:
+| File | Description |
+|------|-------------|
+| `linie_mit_polygon.csv` | Line segments with geometric polylines |
+| `perronkante.csv` | Platform edges and station details |
+| `dienststellen-gemass-opentransportdataswiss.csv` | Station metadata and coordinates |
+| `zugzahlen.csv` | Train frequency / line identifiers (for VC scenarios) |
 
-    diagnostic_polygon_data.py: Analyze track segments and geometry distances
+> ⚠️ These datasets are publicly available but may require preprocessing before use in SUMO simulations.
 
-    diagnostic_perronkante_data.py: Analyze station platform data
+---
 
-Example usage:
+## ⚙️ Environment Setup
 
-python scripts/diagnostics/diagnostic_polygon_data.py
-🛠️ Dependencies
-
-    Python 3.10+
-
-    pandas
-
-    geopandas
-
-    shapely
-
-    pyproj
-
-    matplotlib (optional for plots)
-
-    SUMO (via TraCI)
-
-Environment setup with Conda (recommended):
-
+### 🧩 Conda (recommended)
+```bash
 conda create -n progress_env python=3.10
 conda activate progress_env
 pip install -r requirements.txt
 
 
-📈 Long-Term Vision
+## 🧭 Datasets
 
-This simulation framework will serve as the backbone for multiple virtual coupling decision modules based on machine learning, rule-based logic, and hybrid strategies. Comparative scenarios will be evaluated for their impact on rail operations.
-👤 Author
+All input data are sourced from https://opentransportdata.swiss and projected in **EPSG:2056 (CH1903+).**
 
-Onur Deniz
-PhD Candidate in Railway Engineering
-✈️ Commercial Airline Pilot turned Railway Researcher
-📍 Istanbul
-📃 License
+| File                                                 | Description                                   |
+|------------------------------------------------------|-----------------------------------------------|
+| `linie_mit_polygon.csv`                              | Line segments with geometric polylines        |
+| `perronkante.csv`                                    | Platform edges and station details            |
+| `dienststellen-gemass-opentransportdataswiss.csv`    | Station metadata and coordinates               |
+| `zugzahlen.csv`                                      | Train frequency / line identifiers (VC input) |
 
-MIT License. See LICENSE.md for details.
+⚠️ These datasets are publicly available but often need column harmonization, CRS checks (→ 2056), and filtering before being used inside the SUMO pipeline.
 
+---
 
+## ⚙️ Environment Setup
+
+### 1) Conda (recommended)
+
+Create and activate the environment:
+
+    conda create -n progress_env python=3.10
+    conda activate progress_env
+    pip install -r requirements.txt
+
+(If you use `environment.yml` instead of `requirements.txt`, just run:  
+`conda env create -f environment.yml` and then `conda activate progress_env`.)
+
+### 2) Python version
+
+- Target: **Python 3.10+** (your system currently uses 3.12 on QGIS but the repo is aimed at 3.10–3.11 for maximum library compatibility).
+- SUMO / TraCI parts may require matching SUMO install on the machine.
+
+---
+
+## 📦 Key Dependencies
+
+| Package / Tool               | Purpose                                 |
+|------------------------------|-----------------------------------------|
+| `pandas`, `geopandas`        | Tabular and geospatial data handling    |
+| `shapely`, `pyproj`          | Geometry operations, CRS transforms     |
+| `matplotlib`, `folium`       | Diagnostics, HTML map previews          |
+| `sumolib`, `traci`           | SUMO API integration                    |
+| `logging`, `argparse`        | Pipeline orchestration, CLI arguments   |
+| `ruff`, `black`, `isort`     | Code quality, formatting, imports       |
+
+Notes:
+- `geopandas` + `shapely` + `pyproj` are essential for working with Swiss CH1903+ coordinates.
+- `folium` is used to generate the HTML diagnostics you have in `reports/`.
+- `ruff` / `black` / `isort` are optional but already configured in the repo to keep the codebase tidy.
+
+---
+## 🚀 Running the Pipeline
+
+You can run the entire processing pipeline or specific stages directly from the command line.
+
+### Run all stages (01–04)
+    python run_pipeline.py --start 1 --end 4
+
+### Run a single stage
+    python run_pipeline.py --start 1
+
+Each stage logs its progress, warnings, and output summary to `/logs/` and produces intermediate CSV files under `/data/processed/`.
+
+### Example log excerpt
+    🚀 Running Stage 03 - Generate Station Layouts
+    2025-10-20 20:50:40,823 - INFO - Segments: 265 | Stations: 272
+    2025-10-20 20:50:41,316 - INFO - ✅ Saved output: data/processed/station_design_master.csv
+
+---
+
+## 🧪 Diagnostics & Validation
+
+All diagnostic and geometry-check tools are in:
+- `tools/`
+- `scripts/diagnostics/`
+
+| Script | Function |
+|---------|-----------|
+| `diagnostic_polygon_data.py` | Validates continuity and topology of line geometries |
+| `diagnostic_perronkante_data.py` | Checks consistency of platform and station data |
+| `entry_node_diagnostics.py` | Visualizes station entry nodes and mainline alignment |
+
+Each tool can be run independently:
+    python scripts/diagnostics/diagnostic_polygon_data.py
+
+They generate:
+- Interactive HTML maps in `/reports/`
+- Validation logs in `/data/diagnostics/`
+
+---
+
+## 🧩 Output Structure
+
+| Folder | Description |
+|---------|-------------|
+| `data/processed/` | Clean intermediate datasets (per stage) |
+| `data/diagnostics/` | Logs and validation summaries |
+| `reports/` | Generated Folium maps and visual outputs |
+| `SUMO/inputs/` | Final geometry and node files for simulation |
+| `output/` | Scenario-based SUMO results (emissions, energy, delay) |
+
+---
+
+## 🧠 Recommended Workflow
+
+1. Verify datasets under `data/raw/`
+2. Run pipeline from Stage 00 → Stage 04
+3. Open generated maps in `reports/` to visually confirm geometry
+4. Export SUMO network files from `/SUMO/inputs/`
+5. Run simulation and collect KPIs
+
+---
+
+Next step → **Part 3 (Git branching, code quality, research vision, author/license)**.
+---
+
+## 🌿 Git Branching & Development Workflow
+
+This repository follows a **feature → integrate → stabilize** model that fits a staged Python/SUMO pipeline.
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Stable, demoable, runs end-to-end |
+| `dev`  | Integration branch (multiple stages touched) |
+| `feat/...` | New functionality (e.g. `feat/station-orientation`) |
+| `fix/...`  | Bug / regression fixes (e.g. `fix/issue-01-entry-on-mainline`) |
+| `chore/...`| Repo cleanup, .gitignore, tooling, CI, formatting |
+| `docs/...` | README, design notes, academic writeups |
+
+Typical flow:
+
+    git switch -c fix/issue-01-entry-on-mainline
+    # …do the work…
+    git commit -m "fix: corrected entry node snapping to mainline"
+    git push origin fix/issue-01-entry-on-mainline
+    # → open PR to dev → later squash/merge to main
+
+Notes:
+
+- Every stage change should mention which stage it touches: `stages:01`, `stages:03+utils`, etc.
+- Data files under `data/processed/` must NOT be committed (already handled in .gitignore).
+- SUMO input folders must be generated, not stored.
+
+---
+
+## 🧹 Code Quality & Conventions
+
+This project tries to stay **boringly consistent** so that future you (and reviewers) can follow the logic across stages.
+
+**Tools**
+
+- `black` → formatting
+- `isort` → imports
+- `ruff` → fast linting
+- `pytest` → unit / regression tests for geometry helpers
+- `logging` → instead of `print()`
+- `argparse` → CLI control for `run_pipeline.py`
+
+**Style**
+
+- Python ≥ 3.10
+- Type hints everywhere (`list[tuple[float, float]]`, `dict[str, Any]`, etc.)
+- Google-style docstrings
+
+Example docstring (note: no extra code fences inside README so it can be copy–pasted):
+
+    def compute_polygon_length(coords: list[tuple[float, float]]) -> float:
+        """Compute the total length of a polyline in meters.
+
+        Args:
+            coords: List of (x, y) coordinates in EPSG:2056.
+
+        Returns:
+            Total length in meters.
+        """
+        ...
+
+**Logging pattern**
+
+- Each stage logs:
+  - input rows
+  - output rows
+  - skipped / merged segments
+  - file written with path
+- Log levels: `INFO` for progress, `WARNING` for suspicious geometry, `ERROR` for missing files.
+
+---
+
+## 🔬 Research Vision
+
+This repo is the **engineering backbone** of the PhD work on **Virtual Coupling (VC)** for Swiss (later DACH) railway networks.
+
+**Research questions supported by this repo:**
+
+1. What is the *realistic* headway reduction we get from VC if we respect Swiss infrastructure constraints?
+2. How does mixed traffic (VC-capable + conventional) affect capacity and delay propagation?
+3. Can we express coupling / decoupling as a real-time decision problem (TraCI) and test it in SUMO?
+4. How big is the energy/emissions gain in dense corridors when we VC multiple trains?
+5. Which station / junction geometries become bottlenecks when VC is enabled?
+
+**Planned extensions**
+
+- GTFS and DB/OpenData ingestion to extend Swiss network with German corridors
+- ML-based VC selector (which trains to couple, when, based on KPIs)
+- Safety layer: automatic uncoupling when geometry / schedule / braking distance becomes unsafe
+- Visualization / dashboards for experiments
+
+---
+
+## 👤 Author
+
+**Onur Deniz**  
+PhD Candidate in Railway Engineering  
+Commercial Airline Pilot → Railway / Transport Systems  
+Istanbul Technical University (ITU)
+
+GitHub: https://github.com/onurdenizs
+
+---
+
+## 📜 License
+
+This project is released under the **MIT License**.  
+You may use, modify, and redistribute with proper attribution.
+
+---
+
+## 📚 Citation
+
+If you use this codebase or its generated datasets in academic work, please cite:
+
+    Deniz, O. (2025). "Swiss Railway Network Simulation with Virtual Coupling."
+    PhD Research Project, Istanbul Technical University.
+
+---
+
+✅ End of README
